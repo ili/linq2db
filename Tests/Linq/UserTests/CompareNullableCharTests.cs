@@ -15,8 +15,8 @@ namespace Tests.UserTests
 		class Table1
 		{
 			[PrimaryKey(1)]
-			[Identity] public Int64 Field1 { get; set; }
-			[Nullable] public Char? Foeld2 { get; set; }
+			[Identity] public long  Field1 { get; set; }
+			[Nullable] public char? Foeld2 { get; set; }
 		}
 
 		class Repository : DataConnection
@@ -25,15 +25,13 @@ namespace Tests.UserTests
 			{
 			}
 
-			public ITable<Table1> Table1 { get { return this.GetTable<Table1>(); } }
+			public ITable<Table1> Table1 => GetTable<Table1>();
 		}
 
-#if !NETSTANDARD
 		[Test]
-#endif
-		public void Test()
+		public void Test([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = new Repository(ProviderName.Access))
+			using (var db = new Repository(context))
 			{
 				var q =
 					from current  in db.Table1

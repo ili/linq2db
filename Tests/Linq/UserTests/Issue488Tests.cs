@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Linq;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -15,19 +14,19 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue488Tests : TestBase
 	{
-		public class LinqDataTypes 
+		public class LinqDataTypes
 		{
 			public int ID;
 			public decimal MoneyValue;
 			[Column(DataType = DataType.Date)]public DateTime DateTimeValue;
 			public bool BoolValue;
 			public Guid GuidValue;
-			public Binary BinaryValue;
+			public Binary? BinaryValue;
 			public short SmallIntValue;
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SQLite, TestProvName.SQLiteMs)]
-		public void Test1(string context)
+		[Test]
+		public void Test1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -37,15 +36,16 @@ namespace Tests.UserTests
 					where t2.DateTimeValue == date
 					select t2);
 
-				q.FirstOrDefault();
+				var _ = q.FirstOrDefault();
 
-				Assert.AreEqual(1, ((DataConnection)db).Command.Parameters.Count);
-				Assert.AreEqual(DbType.Date, ((IDbDataParameter) ((DataConnection)db).Command.Parameters[0]).DbType);
+				Assert.AreEqual(2, ((DataConnection)db).Command.Parameters.Count);
+				Assert.True(DbType.Date == ((IDbDataParameter) ((DataConnection)db).Command.Parameters[0]!).DbType
+					^ DbType.Date == ((IDbDataParameter)((DataConnection)db).Command.Parameters[1]!).DbType);
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SQLite, TestProvName.SQLiteMs)]
-		public void Test2(string context)
+		[Test]
+		public void Test2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -54,10 +54,11 @@ namespace Tests.UserTests
 					where t1.DateTimeValue == date
 					select t1);
 
-				q.FirstOrDefault();
+				var _ = q.FirstOrDefault();
 
-				Assert.AreEqual(1, ((DataConnection)db).Command.Parameters.Count);
-				Assert.AreEqual(DbType.Date, ((IDbDataParameter) ((DataConnection)db).Command.Parameters[0]).DbType);
+				Assert.AreEqual(2, ((DataConnection)db).Command.Parameters.Count);
+				Assert.True(DbType.Date == ((IDbDataParameter)((DataConnection)db).Command.Parameters[0]!).DbType
+					^ DbType.Date == ((IDbDataParameter)((DataConnection)db).Command.Parameters[1]!).DbType);
 			}
 		}
 	}

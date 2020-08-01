@@ -17,10 +17,10 @@ namespace Tests.UserTests
 		new class Person
 		{
 			[Identity] public int                       PersonID;
-			[Column]   public Dictionary<string,string> FirstName;
-			[Column]   public string                    LastName;
-			[Column]   public string                    MiddleName;
-			[Column]   public string                    Gender;
+			[Column]   public Dictionary<string,string> FirstName = null!;
+			[Column]   public string                    LastName = null!;
+			[Column]   public string?                   MiddleName;
+			[Column]   public string                    Gender = null!;
 		}
 
 		public enum Gender
@@ -33,9 +33,9 @@ namespace Tests.UserTests
 		class Person2
 		{
 			[Identity] public int                       PersonID;
-			[Column]   public Dictionary<string,string> FirstName;
-			[Column]   public string                    LastName;
-			[Column]   public string                    MiddleName;
+			[Column]   public Dictionary<string,string> FirstName = null!;
+			[Column]   public string                    LastName = null!;
+			[Column]   public string?                   MiddleName;
 			[Column]   public Gender                    Gender;
 		}
 
@@ -43,18 +43,18 @@ namespace Tests.UserTests
 		class PurePerson
 		{
 			[Identity] public int                       PersonID;
-			[Column]   public string                    FirstName;
-			[Column]   public string                    LastName;
-			[Column]   public string                    MiddleName;
-			[Column]   public string                    Gender;
+			[Column]   public string                    FirstName = null!;
+			[Column]   public string                    LastName = null!;
+			[Column]   public string?                   MiddleName;
+			[Column]   public string                    Gender = null!;
 		}
 
-		[Test, DataContextSource]
-		public void Test(string context)
+		[Test]
+		public void Test([DataSources] string context)
 		{
-			MappingSchema.Default.SetConverter<Dictionary<string,string>, string>       (obj => obj == null ? null : obj.Keys.FirstOrDefault());
-			MappingSchema.Default.SetConverter<Dictionary<string,string>, DataParameter>(obj => obj == null ? null : new DataParameter { Value = obj.Keys.FirstOrDefault(), DataType = DataType.NVarChar});
-			MappingSchema.Default.SetConverter<string, Dictionary<string,string>>       (txt => txt == null ? null : new Dictionary<string,string> { { txt, txt } });
+			MappingSchema.Default.SetConverter<Dictionary<string,string>?, string?>       (obj => obj == null ? null : obj.Keys.FirstOrDefault());
+			MappingSchema.Default.SetConverter<Dictionary<string,string>?, DataParameter?>(obj => obj == null ? null : new DataParameter { Value = obj.Keys.FirstOrDefault(), DataType = DataType.NVarChar});
+			MappingSchema.Default.SetConverter<string?, Dictionary<string,string>?>       (txt => txt == null ? null : new Dictionary<string,string> { { txt, txt } });
 
 			using (var db = GetDataContext(context))
 			{
@@ -77,8 +77,10 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.SQLite)]
-		public void TestFail(string context)
+		//[ActiveIssue("What is this test???")]
+		[Test]
+		public void TestFail([IncludeDataSources(true, TestProvName.AllSQLite)]
+			string context)
 		{
 			try
 			{
@@ -91,25 +93,25 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void TestEnumDefaultType1(string context)
+		[Test]
+		public void TestEnumDefaultType1([DataSources] string context)
 		{
 			TestEnumString(context, ms => ms.SetDefaultFromEnumType(typeof(Gender), typeof(string)));
 		}
 
-		[Test, DataContextSource]
-		public void TestEnumDefaultType2(string context)
+		[Test]
+		public void TestEnumDefaultType2([DataSources] string context)
 		{
 			TestEnumString(context, ms => ms.SetDefaultFromEnumType(typeof(Enum), typeof(string)));
 		}
 
-		[Test, DataContextSource]
-		public void TestEnumConverter(string context)
+		[Test]
+		public void TestEnumConverter([DataSources] string context)
 		{
 			TestEnumString(context, ms =>
 			{
 				ms.SetConverter<Gender, string>       (obj => obj.ToString() );
-				ms.SetConverter<Gender, DataParameter>(obj => new DataParameter { Value = obj.ToString() });
+				ms.SetConverter<Gender, DataParameter>(obj => new DataParameter { Value = obj.ToString(), DataType = DataType.NVarChar });
 				ms.SetConverter<string, Gender>       (txt => (Gender)Enum.Parse(typeof(Gender), txt));
 			});
 		}
@@ -117,9 +119,9 @@ namespace Tests.UserTests
 		public void TestEnumString(string context, Action<MappingSchema> initMappingSchema)
 		{
 			var ms = new MappingSchema();
-			ms.SetConverter<Dictionary<string, string>, string>       (obj => obj == null ? null : obj.Keys.FirstOrDefault());
-			ms.SetConverter<Dictionary<string, string>, DataParameter>(obj => obj == null ? null : new DataParameter { Value = obj.Keys.FirstOrDefault(), DataType = DataType.NVarChar });
-			ms.SetConverter<string, Dictionary<string, string>>       (txt => txt == null ? null : new Dictionary<string, string> { { txt, txt } });
+			ms.SetConverter<Dictionary<string, string>?, string?>       (obj => obj == null ? null : obj.Keys.FirstOrDefault());
+			ms.SetConverter<Dictionary<string, string>?, DataParameter?>(obj => obj == null ? null : new DataParameter { Value = obj.Keys.FirstOrDefault(), DataType = DataType.NVarChar });
+			ms.SetConverter<string?, Dictionary<string, string>?>       (txt => txt == null ? null : new Dictionary<string, string> { { txt, txt } });
 
 			initMappingSchema(ms);
 

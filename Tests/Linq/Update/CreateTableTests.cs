@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -10,18 +11,19 @@ using NUnit.Framework;
 namespace Tests.xUpdate
 {
 	[TestFixture]
+	[Order(10000)]
 	public class CreateTableTests : TestBase
 	{
 		class TestTable
 		{
 			public int       ID;
-			public string    Field1;
-			public string    Field2;
+			public string?   Field1;
+			public string?   Field2;
 			public DateTime? CreatedOn;
 		}
 
-		[Test, DataContextSource]
-		public void CreateTable1(string context)
+		[Test]
+		public void CreateTable1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -33,13 +35,7 @@ namespace Tests.xUpdate
 						.Property(t => t.Field1)
 							.HasLength(50);
 
-				try
-				{
-					db.DropTable<TestTable>();
-				}
-				catch (Exception)
-				{
-				}
+				db.DropTable<TestTable>(throwExceptionIfNotExists:false);
 
 				var table = db.CreateTable<TestTable>();
 				var list = table.ToList();
@@ -48,8 +44,30 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2008 /*, ProviderName.DB2*/)]
-		public void CreateLocalTempTable1(string context)
+		[Test]
+		public async Task CreateTable1Async([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.MappingSchema.GetFluentMappingBuilder()
+					.Entity<TestTable>()
+						.Property(t => t.ID)
+							.IsIdentity()
+							.IsPrimaryKey()
+						.Property(t => t.Field1)
+							.HasLength(50);
+
+				await db.DropTableAsync<TestTable>(throwExceptionIfNotExists:false);
+
+				var table = await db.CreateTableAsync<TestTable>();
+				var list  = await table.ToListAsync();
+
+				await db.DropTableAsync<TestTable>();
+			}
+		}
+
+		[Test]
+		public void CreateLocalTempTable1([IncludeDataSources(TestProvName.AllSqlServer2008Plus /*, ProviderName.DB2*/)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -64,11 +82,15 @@ namespace Tests.xUpdate
 				{
 					switch (context)
 					{
-						case ProviderName.SqlServer2008 : db.DropTable<TestTable>("#" + tableName); break;
+						case ProviderName.SqlServer2008 :
+						case ProviderName.SqlServer2012 :
+						case ProviderName.SqlServer2014 :
+						case ProviderName.SqlServer2017 :
+						case TestProvName.SqlAzure      : db.DropTable<TestTable>("#" + tableName); break;
 						default                         : db.DropTable<TestTable>(tableName);       break;
 					}
 				}
-				catch (Exception)
+				catch
 				{
 				}
 
@@ -77,6 +99,10 @@ namespace Tests.xUpdate
 				switch (context)
 				{
 					case ProviderName.SqlServer2008 :
+					case ProviderName.SqlServer2012 :
+					case ProviderName.SqlServer2014 :
+					case ProviderName.SqlServer2017 :
+					case TestProvName.SqlAzure      :
 						table = db.CreateTable<TestTable>("#" + tableName);
 						break;
 					case ProviderName.DB2 :
@@ -89,6 +115,62 @@ namespace Tests.xUpdate
 				var list = table.ToList();
 
 				table.Drop();
+			}
+		}
+
+		[Test]
+		public async Task CreateLocalTempTable1Async([IncludeDataSources(
+			TestProvName.AllSQLite,
+			TestProvName.AllSqlServer2008Plus /*, ProviderName.DB2*/)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.MappingSchema.GetFluentMappingBuilder()
+					.Entity<TestTable>()
+						.Property(t => t.Field1)
+							.HasLength(50);
+
+				const string tableName = "TestTable";
+
+				try
+				{
+					switch (context)
+					{
+						case ProviderName.SqlServer2008 :
+						case ProviderName.SqlServer2012 :
+						case ProviderName.SqlServer2014 :
+						case ProviderName.SqlServer2017 :
+						case TestProvName.SqlAzure      : await db.DropTableAsync<TestTable>("#" + tableName); break;
+						default                         : await db.DropTableAsync<TestTable>(tableName);       break;
+					}
+				}
+				catch
+				{
+				}
+
+				ITable<TestTable> table;
+
+				switch (context)
+				{
+					case ProviderName.SqlServer2008 :
+					case ProviderName.SqlServer2012 :
+					case ProviderName.SqlServer2014 :
+					case ProviderName.SqlServer2017 :
+					case TestProvName.SqlAzure      :
+						table = await db.CreateTableAsync<TestTable>("#" + tableName);
+						break;
+					case ProviderName.DB2 :
+						table = await db.CreateTableAsync<TestTable>(statementHeader:"DECLARE GLOBAL TEMPORARY TABLE SESSION.{0}");
+						break;
+					default:
+						table = await db.CreateTableAsync<TestTable>(tableName);
+						break;
+				}
+
+				var list = await table.ToListAsync();
+
+				await table.DropAsync();
 			}
 		}
 
@@ -121,8 +203,8 @@ namespace Tests.xUpdate
 			public FieldType3 Field3;
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)]
-		public void CreateTableWithEnum(string context)
+		[Test]
+		public void CreateTableWithEnum([IncludeDataSources(ProviderName.SqlServer2012)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -162,18 +244,18 @@ namespace Tests.xUpdate
 		}
 		public class aa : base_aa
 		{
-			public int    bb { get; set; }
-			public string cc { get; set; }
-		}
-		
-		public class qq
-		{
-			public int bb { get; set; }
-			public string cc { get; set; }
+			public int     bb { get; set; }
+			public string? cc { get; set; }
 		}
 
-		[Test, DataContextSource]
-		public void TestIssue160(string context)
+		public class qq
+		{
+			public int     bb { get; set; }
+			public string? cc { get; set; }
+		}
+
+		[Test]
+		public void TestIssue160([DataSources] string context)
 		{
 			using (var conn = GetDataContext(context))
 			{
@@ -183,7 +265,7 @@ namespace Tests.xUpdate
 						.Property(t => t.bb).IsPrimaryKey()
 						.Property(t => t.cc)
 						.Property(t => t.dd).IsNotColumn()
-					
+
 					.Entity<qq>()
 						.HasTableName("aa")
 						.Property(t => t.bb).IsPrimaryKey()
@@ -216,8 +298,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)]
-		public void CreateTable2(string context)
+		[Test]
+		public void CreateTable2([IncludeDataSources(ProviderName.SqlServer2012)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -246,8 +328,8 @@ namespace Tests.xUpdate
 			public int Field2;
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)]
-		public void CreateFormatTest(string context)
+		[Test]
+		public void CreateFormatTest([IncludeDataSources(ProviderName.SqlServer2012)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

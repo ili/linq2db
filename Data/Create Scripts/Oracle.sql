@@ -1,6 +1,13 @@
--- Cleanup schema
+﻿-- Cleanup schema
 
-DROP SEQUENCE PersonSeq
+BEGIN
+	EXECUTE IMMEDIATE 'DROP SEQUENCE ' || 'PersonSeq';
+EXCEPTION
+	WHEN OTHERS THEN
+		IF SQLCODE != -2289 THEN
+			RAISE;
+		END IF;
+END;
 /
 DROP TABLE Doctor
 /
@@ -54,10 +61,10 @@ CREATE TABLE StringTest
 INSERT INTO StringTest (StringValue1, StringValue2, KeyValue) VALUES ('Value1', 'Value2', 'HasValues')
 /
 INSERT INTO StringTest (StringValue1, StringValue2, KeyValue) VALUES (null,     null,     'NullValues')
-/
+
 
 -- Inheritance Parent/Child
-
+/
 DROP TABLE InheritanceParent
 /
 
@@ -68,7 +75,6 @@ CREATE TABLE InheritanceParent
 	Name                NVARCHAR2(50)     NULL
 )
 /
-
 DROP TABLE InheritanceChild
 /
 
@@ -92,7 +98,7 @@ CREATE TABLE Person
 	, Lastname                     VARCHAR2(50) NOT NULL
 	, Middlename                   VARCHAR2(50)
 	, Gender                       CHAR(1) NOT NULL
-	
+
 	, CONSTRAINT Ck_Person_Gender  CHECK (Gender IN ('M', 'F', 'U', 'O'))
 	)
 /
@@ -118,7 +124,7 @@ END;
 CREATE TABLE Doctor
 	( PersonID                       NUMBER NOT NULL PRIMARY KEY
 	, Taxonomy                       NVARCHAR2(50) NOT NULL
-	
+
 	, CONSTRAINT Fk_Doctor_Person FOREIGN KEY (PersonID)
 		REFERENCES Person (PersonID) ON DELETE CASCADE
 	)
@@ -129,7 +135,7 @@ CREATE TABLE Doctor
 CREATE TABLE Patient
 	( PersonID                       NUMBER NOT NULL PRIMARY KEY
 	, Diagnosis                      NVARCHAR2(256) NOT NULL
-	
+
 	, CONSTRAINT Fk_Patient_Person FOREIGN KEY (PersonID)
 		REFERENCES Person (PersonID) ON DELETE CASCADE
 	)
@@ -143,6 +149,8 @@ INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson',
 /
 INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
 /
+INSERT INTO Person  (FirstName, LastName, MiddleName, Gender) VALUES ('Jürgen', 'König', 'Ko', 'M')
+/
 INSERT INTO Doctor  (PersonID,  Taxonomy)  VALUES (1, 'Psychiatry')
 /
 INSERT INTO Patient (PersonID,  Diagnosis) VALUES (2, 'Hallucination with Paranoid Bugs'' Delirium of Persecution')
@@ -150,7 +158,7 @@ INSERT INTO Patient (PersonID,  Diagnosis) VALUES (2, 'Hallucination with Parano
 
 -- Person_Delete
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 PROCEDURE Person_Delete(pPersonID IN NUMBER) IS
 BEGIN
 DELETE FROM
@@ -162,7 +170,7 @@ END;
 
 -- Person_Insert
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 PROCEDURE Person_Insert_OutputParameter
 	( pFirstName  IN NVARCHAR2
 	, pLastName   IN NVARCHAR2
@@ -182,7 +190,7 @@ INTO
 END;
 /
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 FUNCTION Person_Insert
 	( pFirstName  IN NVARCHAR2
 	, pLastName   IN NVARCHAR2
@@ -204,7 +212,7 @@ INTO
 
 OPEN retCursor FOR
 	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender     
+		PersonID, Firstname, Lastname, Middlename, Gender
 	FROM
 		Person
 	WHERE
@@ -216,14 +224,14 @@ END;
 
 -- Person_SelectAll
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 FUNCTION Person_SelectAll
 RETURN SYS_REFCURSOR IS
 	retCursor SYS_REFCURSOR;
 BEGIN
 OPEN retCursor FOR
 	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender     
+		PersonID, Firstname, Lastname, Middlename, Gender
 	FROM
 		Person;
 RETURN
@@ -233,14 +241,14 @@ END;
 
 -- Person_SelectAllByGender
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 FUNCTION Person_SelectAllByGender(pGender IN CHAR)
 RETURN SYS_REFCURSOR IS
 	retCursor SYS_REFCURSOR;
 BEGIN
 OPEN retCursor FOR
 	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender     
+		PersonID, Firstname, Lastname, Middlename, Gender
 	FROM
 		Person
 	WHERE
@@ -252,14 +260,14 @@ END;
 
 -- Person_SelectByKey
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 FUNCTION Person_SelectByKey(pID IN NUMBER)
 RETURN SYS_REFCURSOR IS
 	retCursor SYS_REFCURSOR;
 BEGIN
 OPEN retCursor FOR
 	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender     
+		PersonID, Firstname, Lastname, Middlename, Gender
 	FROM
 		Person
 	WHERE
@@ -271,7 +279,7 @@ END;
 
 -- Person_SelectByName
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 FUNCTION Person_SelectByName
 	( pFirstName IN NVARCHAR2
 	, pLastName  IN NVARCHAR2
@@ -281,7 +289,7 @@ RETURN SYS_REFCURSOR IS
 BEGIN
 OPEN retCursor FOR
 	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender     
+		PersonID, Firstname, Lastname, Middlename, Gender
 	FROM
 		Person
 	WHERE
@@ -293,7 +301,7 @@ END;
 
 -- Person_SelectListByName
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 FUNCTION Person_SelectListByName
 	( pFirstName IN NVARCHAR2
 	, pLastName  IN NVARCHAR2
@@ -303,7 +311,7 @@ RETURN SYS_REFCURSOR IS
 BEGIN
 OPEN retCursor FOR
 	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender     
+		PersonID, Firstname, Lastname, Middlename, Gender
 	FROM
 		Person
 	WHERE
@@ -313,7 +321,7 @@ RETURN
 END;
 /
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 PROCEDURE Person_Update
 	( pPersonID   IN NUMBER
 	, pFirstName  IN NVARCHAR2
@@ -336,7 +344,7 @@ END;
 
 -- Patient_SelectAll
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 FUNCTION Patient_SelectAll
 RETURN SYS_REFCURSOR IS
 	retCursor SYS_REFCURSOR;
@@ -356,7 +364,7 @@ END;
 
 -- Patient_SelectByName
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 FUNCTION Patient_SelectByName
 	( pFirstName IN NVARCHAR2
 	, pLastName  IN NVARCHAR2
@@ -407,7 +415,7 @@ END;
 
 -- OutRefTest
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 PROCEDURE OutRefTest
 	( pID             IN     NUMBER
 	, pOutputID       OUT    NUMBER
@@ -424,7 +432,7 @@ BEGIN
 END;
 /
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 PROCEDURE OutRefEnumTest
 	( pStr            IN     NVARCHAR2
 	, pOutputStr      OUT    NVARCHAR2
@@ -438,7 +446,7 @@ END;
 
 -- ArrayTest
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 PROCEDURE ArrayTest
 	( pIntArray            IN     DBMS_UTILITY.NUMBER_ARRAY
 	, pOutputIntArray      OUT    DBMS_UTILITY.NUMBER_ARRAY
@@ -462,7 +470,7 @@ END LOOP;
 END;
 /
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 PROCEDURE ScalarArray
 	( pOutputIntArray      OUT    DBMS_UTILITY.NUMBER_ARRAY
 	) IS
@@ -475,7 +483,7 @@ END;
 
 -- ResultSetTest
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 PROCEDURE RESULTSETTEST
 	( mr OUT SYS_REFCURSOR
 	, sr OUT SYS_REFCURSOR
@@ -494,7 +502,7 @@ END;
 
 -- ExecuteScalarTest
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 FUNCTION Scalar_DataReader
 RETURN SYS_REFCURSOR
 IS
@@ -502,7 +510,7 @@ IS
 BEGIN
 OPEN retCursor FOR
 	SELECT
-		12345 intField, '54321' stringField 
+		12345 intField, '54321' stringField
 	FROM
 		DUAL;
 RETURN
@@ -510,7 +518,7 @@ RETURN
 END;
 /
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 PROCEDURE Scalar_OutputParameter
 	( pOutputInt    OUT BINARY_INTEGER
 	, pOutputString OUT NVARCHAR2
@@ -521,7 +529,7 @@ BEGIN
 END;
 /
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 FUNCTION Scalar_ReturnParameter
 RETURN BINARY_INTEGER IS
 BEGIN
@@ -621,7 +629,8 @@ CREATE TABLE LinqDataTypes
 	BinaryValue    blob         NULL,
 	SmallIntValue  smallint,
 	IntValue       int          NULL,
-	BigIntValue    number(20,0) NULL
+	BigIntValue    number(20,0) NULL,
+	StringValue    VARCHAR2(50) NULL
 )
 /
 
@@ -673,7 +682,6 @@ create sequence sq_test_user
 /
 create sequence sq_test_user_contract
 /
-
 
 DROP SEQUENCE TestIdentitySeq
 /
@@ -728,6 +736,7 @@ CREATE TABLE AllTypes
 	localZoneDataType        timestamp with local time zone NULL,
 
 	charDataType             char(1)                        NULL,
+	char20DataType           char(20)                       NULL,
 	varcharDataType          varchar2(20)                   NULL,
 	textDataType             clob                           NULL,
 	ncharDataType            nchar(20)                      NULL,
@@ -737,10 +746,11 @@ CREATE TABLE AllTypes
 	binaryDataType           blob                           NULL,
 	bfileDataType            bfile                          NULL,
 	guidDataType             raw(16)                        NULL,
+	longDataType             long                           NULL,
 
 	uriDataType              UriType                        NULL,
 	xmlDataType              XmlType                        NULL
-) 
+)
 /
 
 DROP SEQUENCE AllTypesSeq
@@ -789,6 +799,7 @@ INSERT INTO AllTypes
 	binaryDataType,
 	bfileDataType,
 	guidDataType,
+	longDataType,
 
 	uriDataType,
 	xmlDataType
@@ -821,6 +832,7 @@ SELECT
 	NULL binaryDataType,
 	NULL bfileDataType,
 	NULL guidDataType,
+	NULL longDataType,
 
 	NULL uriDataType,
 	NULL xmlDataType
@@ -854,6 +866,7 @@ SELECT
 	to_blob('00AA'),
 	bfilename('DATA_DIR', 'bfile.txt'),
 	sys_guid(),
+	'LONG',
 
 	SYS.URIFACTORY.GETURI('http://www.linq2db.com'),
 	XMLTYPE('<root><element strattr="strvalue" intattr="12345"/></root>')
@@ -866,6 +879,21 @@ create table t_entity
 	time      date,
 	duration  interval day(3) to second(2)
 )
+/
+
+DROP TABLE LongRawTable
+/
+
+CREATE TABLE LongRawTable
+(
+	ID              NUMBER        NOT NULL PRIMARY KEY,
+	longRawDataType long raw      NULL
+)
+/
+
+INSERT INTO LongRawTable
+SELECT 1, NULL                        FROM dual UNION ALL
+SELECT 2, to_blob('4c4f4e4720524157') FROM dual -- "LONG RAW"
 /
 
 DROP TABLE DecimalOverflow
@@ -891,4 +919,205 @@ SELECT -12345678901234.56789012345678,                           NULL,          
 SELECT  12345678901234.5678901234567,                            NULL,                                  NULL,                 NULL,                                  NULL FROM dual UNION ALL
 SELECT -12345678901234.5678901234567,                            NULL,                                  NULL,                 NULL,                                  NULL FROM dual
 
+
+-- merge test tables
+/
+DROP TABLE TestMerge1
+/
+DROP TABLE TestMerge2
+/
+
+CREATE TABLE TestMerge1
+(
+	Id		NUMBER	NOT NULL PRIMARY KEY,
+	Field1	NUMBER	NULL,
+	Field2	NUMBER	NULL,
+	Field3	NUMBER	NULL,
+	Field4	NUMBER	NULL,
+	Field5	NUMBER	NULL,
+
+	FieldInt64      NUMBER(20, 0)               NULL,
+	FieldBoolean    NUMBER(1, 0)                NULL,
+	FieldString     VARCHAR(20)                 NULL,
+	FieldNString    NVARCHAR2(20)               NULL,
+	FieldChar       CHAR(1)                     NULL,
+	FieldNChar      NCHAR(1)                    NULL,
+	FieldFloat      BINARY_FLOAT                NULL,
+	FieldDouble     BINARY_DOUBLE               NULL,
+	FieldDateTime   DATE                        NULL,
+	FieldDateTime2  TIMESTAMP(7) WITH TIME ZONE NULL,
+	FieldBinary     BLOB                        NULL,
+	FieldGuid       RAW(16)                     NULL,
+	FieldDecimal    DECIMAL(24, 10)             NULL,
+	FieldEnumString VARCHAR(20)                 NULL,
+	FieldEnumNumber NUMBER                      NULL
+)
+/
+CREATE TABLE TestMerge2
+(
+	Id		NUMBER	NOT NULL PRIMARY KEY,
+	Field1	NUMBER	NULL,
+	Field2	NUMBER	NULL,
+	Field3	NUMBER	NULL,
+	Field4	NUMBER	NULL,
+	Field5	NUMBER	NULL,
+
+	FieldInt64      NUMBER(20, 0)               NULL,
+	FieldBoolean    NUMBER(1, 0)                NULL,
+	FieldString     VARCHAR(20)                 NULL,
+	FieldNString    NVARCHAR2(20)               NULL,
+	FieldChar       CHAR(1)                     NULL,
+	FieldNChar      NCHAR(1)                    NULL,
+	FieldFloat      BINARY_FLOAT                NULL,
+	FieldDouble     BINARY_DOUBLE               NULL,
+	FieldDateTime   DATE                        NULL,
+	FieldDateTime2  TIMESTAMP(7) WITH TIME ZONE NULL,
+	FieldBinary     BLOB                        NULL,
+	FieldGuid       RAW(16)                     NULL,
+	FieldDecimal    DECIMAL(24, 10)             NULL,
+	FieldEnumString VARCHAR(20)                 NULL,
+	FieldEnumNumber NUMBER                      NULL
+)
+/
+
+CREATE OR REPLACE
+PROCEDURE AddIssue792Record() IS
+BEGIN
+	INSERT INTO dbo.AllTypes(char20DataType) VALUES('issue792');
+END;
+/
+
+
+CREATE OR REPLACE
+PROCEDURE AllOutputParameters
+(
+	ID                       IN OUT int                            ,
+
+	bigintDataType           IN OUT number                         ,
+	numericDataType          IN OUT number                         ,
+	bitDataType              IN OUT number                         ,
+	smallintDataType         IN OUT number                         ,
+	decimalDataType          IN OUT number                         ,
+	smallmoneyDataType       IN OUT number                         ,
+	intDataType              IN OUT number                         ,
+	tinyintDataType          IN OUT number                         ,
+	moneyDataType            IN OUT number                         ,
+	floatDataType            IN OUT binary_double                  ,
+	realDataType             IN OUT binary_float                   ,
+
+	datetimeDataType         IN OUT date                           ,
+	datetime2DataType        IN OUT timestamp                      ,
+	datetimeoffsetDataType   IN OUT timestamp with time zone       ,
+	localZoneDataType        IN OUT timestamp with local time zone ,
+
+	charDataType             IN OUT char                           ,
+	char20DataType           IN OUT char                           ,
+	varcharDataType          IN OUT varchar2                       ,
+	textDataType             IN OUT clob                           ,
+	ncharDataType            IN OUT nchar                          ,
+	nvarcharDataType         IN OUT nvarchar2                      ,
+	ntextDataType            IN OUT nclob                          ,
+
+	binaryDataType           IN OUT blob                           ,
+ 	bfileDataType            IN OUT bfile                          ,
+	guidDataType             IN OUT raw                            ,
+
+	--uriDataType              IN OUT UriType                        ,
+	xmlDataType              IN OUT XmlType
+
+) IS
+BEGIN
+	SELECT
+		at.ID,
+
+		at.bigintDataType,
+		at.numericDataType,
+		at.bitDataType,
+		at.smallintDataType,
+		at.decimalDataType,
+		at.smallmoneyDataType,
+		at.intDataType,
+		at.tinyintDataType,
+		at.moneyDataType,
+		at.floatDataType,
+		at.realDataType,
+
+		at.datetimeDataType,
+		at.datetime2DataType,
+		at.datetimeoffsetDataType,
+		at.localZoneDataType,
+
+		at.charDataType,
+		at.char20DataType,
+		at.varcharDataType,
+		at.textDataType,
+		at.ncharDataType,
+		at.nvarcharDataType,
+		at.ntextDataType,
+
+		at.binaryDataType,
+ 		at.bfileDataType,
+		at.guidDataType,
+
+		--at.uriDataType,
+		at.xmlDataType
+
+		INTO
+
+		ID,
+
+		bigintDataType,
+		numericDataType,
+		bitDataType,
+		smallintDataType,
+		decimalDataType,
+		smallmoneyDataType,
+		intDataType,
+		tinyintDataType,
+		moneyDataType,
+		floatDataType,
+		realDataType,
+
+		datetimeDataType,
+		datetime2DataType,
+		datetimeoffsetDataType,
+		localZoneDataType,
+
+		charDataType,
+		char20DataType,
+		varcharDataType,
+		textDataType,
+		ncharDataType,
+		nvarcharDataType,
+		ntextDataType,
+
+		binaryDataType,
+ 		bfileDataType,
+		guidDataType,
+
+		--uriDataType,
+		xmlDataType
+
+	FROM ALLTYPES at
+	WHERE at.ID = 2;
+END;
+/
+
+CREATE OR REPLACE PACKAGE ISSUE2132 AS
+procedure test;
+END;
+/
+
+CREATE OR REPLACE PACKAGE BODY ISSUE2132 AS 
+procedure test is
+	begin
+		return 4;
+	end test;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE TEST2132
+BEGIN
+	return 6;
+END;
 /

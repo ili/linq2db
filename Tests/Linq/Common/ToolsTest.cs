@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 using LinqToDB.Common;
 using LinqToDB.Extensions;
+
 using NUnit.Framework;
 
 namespace Tests.Common
@@ -14,17 +11,25 @@ namespace Tests.Common
 	[TestFixture]
 	public class ToolsTest
 	{
-		[Test, Category("WindowsOnly")]
+		[Test]
 		public void GetPathFromUriTest()
 		{
-			Assert.AreEqual(@"C:\Test\Space( )(h#)(p%20){[a&],t@,p%,+}.,\Release", @"file:///C:/Test/Space( )(h#)(p%20){[a&],t@,p%,+}.,/Release".GetPathFromUri());
-			Assert.AreEqual(@"C:\Test\Space( )(h#)(p%20){[a&],t@,p%,+}.,\Release",  @"file://C:/Test/Space( )(h#)(p%20){[a&],t@,p%,+}.,/Release".GetPathFromUri());
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				Assert.AreEqual(@"C:\Test\Space( )(h#)(p%20){[a&],t@,p%,+}.,\Release", @"file:///C:/Test/Space( )(h#)(p%20){[a&],t@,p%,+}.,/Release".GetPathFromUri());
+				Assert.AreEqual(@"C:\Test\Space( )(h#)(p%20){[a&],t@,p%,+}.,\Release", @"file://C:/Test/Space( )(h#)(p%20){[a&],t@,p%,+}.,/Release".GetPathFromUri());
+			}
+			else
+			{
+				Assert.AreEqual(@"/Test/Space( )(h#)(p%20){[a&],t@,p%,+}.,/Release", @"file:////Test/Space( )(h#)(p%20){[a&],t@,p%,+}.,/Release".GetPathFromUri());
+				Assert.AreEqual(@"/Test/Space( )(h#)(p%20){[a&],t@,p%,+}.,/Release", @"file:///Test/Space( )(h#)(p%20){[a&],t@,p%,+}.,/Release".GetPathFromUri());
+			}
 		}
 
 		[Test]
 		public void AssemblyPathTest()
 		{
-			var asm = typeof(ToolsTest).AssemblyEx();
+			var asm = typeof(ToolsTest).Assembly;
 
 			var path = asm.GetPath();
 			var file = asm.GetFileName();

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
 
@@ -15,10 +15,11 @@ namespace Tests.xUpdate
 	using Model;
 
 	[TestFixture]
+	[Order(10000)]
 	public class DeleteTests : TestBase
 	{
-		[Test, DataContextSource]
-		public void Delete1(string context)
+		[Test]
+		public void Delete1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -40,8 +41,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Delete2(string context)
+		[Test]
+		public void Delete2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -63,8 +64,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void Delete3(string context)
+		[Test]
+		public void Delete3([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -76,7 +77,7 @@ namespace Tests.xUpdate
 					db.Child.Insert(() => new Child { ParentID = 1, ChildID = 1002 });
 
 					Assert.AreEqual(3, db.Child.Count(c => c.ParentID == 1));
-					Assert.AreEqual(2, db.Child.Where(c => c.Parent.ParentID == 1 && new[] { 1001, 1002 }.Contains(c.ChildID)).Delete());
+					Assert.AreEqual(2, db.Child.Where(c => c.Parent!.ParentID == 1 && new[] { 1001, 1002 }.Contains(c.ChildID)).Delete());
 					Assert.AreEqual(1, db.Child.Count(c => c.ParentID == 1));
 				}
 				finally
@@ -86,31 +87,31 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void Delete4(string context)
+		[Test]
+		public void Delete4([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				try
 				{
-					db.GrandChild1.Delete(gc => new[] { 1001, 1002 }.Contains(gc.GrandChildID.Value));
+					db.GrandChild1.Delete(gc => new[] { 1001, 1002 }.Contains(gc.GrandChildID!.Value));
 
 					db.GrandChild.Insert(() => new GrandChild { ParentID = 1, ChildID = 1, GrandChildID = 1001 });
 					db.GrandChild.Insert(() => new GrandChild { ParentID = 1, ChildID = 2, GrandChildID = 1002 });
 
 					Assert.AreEqual(3, db.GrandChild1.Count(gc => gc.ParentID == 1));
-					Assert.AreEqual(2, db.GrandChild1.Where(gc => gc.Parent.ParentID == 1 && new[] { 1001, 1002 }.Contains(gc.GrandChildID.Value)).Delete());
+					Assert.AreEqual(2, db.GrandChild1.Where(gc => gc.Parent!.ParentID == 1 && new[] { 1001, 1002 }.Contains(gc.GrandChildID!.Value)).Delete());
 					Assert.AreEqual(1, db.GrandChild1.Count(gc => gc.ParentID == 1));
 				}
 				finally
 				{
-					db.GrandChild1.Delete(gc => new[] { 1001, 1002 }.Contains(gc.GrandChildID.Value));
+					db.GrandChild1.Delete(gc => new[] { 1001, 1002 }.Contains(gc.GrandChildID!.Value));
 				}
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Delete5(string context)
+		[Test]
+		public void Delete5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -134,8 +135,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.Informix)]
-		public void AlterDelete(string context)
+		[Test]
+		public void AlterDelete([DataSources(false, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -148,17 +149,26 @@ namespace Tests.xUpdate
 
 				q.Delete();
 
-				var sql = ((DataConnection)db).LastQuery;
+				var sql = ((DataConnection)db).LastQuery!;
 
 				if (sql.Contains("EXISTS"))
 					Assert.That(sql.IndexOf("(("), Is.GreaterThan(0));
 			}
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Firebird, ProviderName.SapHana)]
-		public void DeleteMany1(string context)
+		[Test]
+		public void DeleteMany1(
+			[DataSources(
+				TestProvName.AllAccess,
+				ProviderName.DB2,
+				TestProvName.AllInformix,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				ProviderName.SqlCe,
+				TestProvName.AllSQLite,
+				TestProvName.AllFirebird,
+				TestProvName.AllSapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -185,11 +195,19 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Firebird, ProviderName.SapHana
-			)]
-		public void DeleteMany2(string context)
+		[Test]
+		public void DeleteMany2(
+			[DataSources(
+				TestProvName.AllAccess,
+				ProviderName.DB2,
+				TestProvName.AllInformix,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				TestProvName.AllFirebird,
+				ProviderName.SqlCe,
+				TestProvName.AllSapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -225,11 +243,19 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Firebird, ProviderName.SapHana
-			)]
-		public void DeleteMany3(string context)
+		[Test]
+		public void DeleteMany3(
+			[DataSources(
+				TestProvName.AllAccess,
+				ProviderName.DB2,
+				TestProvName.AllInformix,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				TestProvName.AllFirebird,
+				ProviderName.SqlCe,
+				TestProvName.AllSapHana)]
+			string context)
 		{
 			var ids = new[] { 1001 };
 
@@ -264,22 +290,20 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(
-			ProviderName.Access,
-			ProviderName.DB2,
-			ProviderName.Firebird,
-			ProviderName.Informix,
-			ProviderName.MySql,
-			TestProvName.MariaDB, 
-			TestProvName.MySql57,
-			ProviderName.PostgreSQL,
-			ProviderName.SQLite, 
-			TestProvName.SQLiteMs,
-			ProviderName.SqlCe,
-			ProviderName.SqlServer2000,
-			ProviderName.SapHana
-			)]
-		public void DeleteTop(string context)
+		[Test]
+		public void DeleteTakeNotOrdered(
+			[DataSources(
+				TestProvName.AllAccess,
+				ProviderName.DB2,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				TestProvName.AllFirebird,
+				TestProvName.AllInformix,
+				TestProvName.AllMySql,
+				ProviderName.SqlCe,
+				ProviderName.SqlServer2000,
+				TestProvName.AllSapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -303,7 +327,76 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-	
+
+		[Test]
+		public void DeleteTakeOrdered([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					using (new DisableLogging())
+					{
+						db.Parent.Delete(c => c.ParentID >= 1000);
+						for (var i = 0; i < 10; i++)
+							db.Insert(new Parent { ParentID = 1000 + i });
+					}
+
+					var entities =
+						from x in db.Parent
+						where x.ParentID > 1000
+						orderby x.ParentID descending
+						select x;
+
+					var rowsAffected = entities
+						.Take(5)
+						.Delete();
+
+					Assert.That(rowsAffected, Is.EqualTo(5));
+				}
+				finally
+				{
+					db.Parent.Delete(c => c.ParentID >= 1000);
+				}
+			}
+		}
+
+		[Test]
+		public void DeleteSkipTake([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					using (new DisableLogging())
+					{
+						db.Parent.Delete(c => c.ParentID >= 1000);
+						for (var i = 0; i < 10; i++)
+							db.Insert(new Parent { ParentID = 1000 + i });
+					}
+
+					var entities =
+						from x in db.Parent
+						where x.ParentID > 1000
+						orderby x.ParentID descending
+						select x;
+
+					var rowsAffected = entities
+						.Skip(1)
+						.Take(5)
+						.Delete();
+
+					Assert.That(rowsAffected, Is.EqualTo(5));
+
+					Assert.False(db.Parent.Where(p => p.ParentID == 1000 + 9).Single().Value1 == 1);
+				}
+				finally
+				{
+					db.Parent.Delete(c => c.ParentID >= 1000);
+				}
+			}
+		}
+
 		string ContainsJoin1Impl(TestDataConnection db, int[] arr)
 		{
 			var id = 1000;
@@ -315,11 +408,11 @@ namespace Tests.xUpdate
 				select p
 			).Delete();
 
-			return db.LastQuery;
+			return db.LastQuery!;
 		}
 
-		[Test, DataContextSource(false, ProviderName.Informix)]
-		public void ContainsJoin1(string context)
+		[Test]
+		public void ContainsJoin1([DataSources(false, TestProvName.AllInformix)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -348,8 +441,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.Informix)]
-		public void MultipleDelete(string context)
+		[Test]
+		public void MultipleDelete([DataSources(false, TestProvName.AllInformix)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -368,6 +461,83 @@ namespace Tests.xUpdate
 				finally
 				{
 					db.Parent.Delete(c => c.ParentID >= 1000);
+				}
+			}
+		}
+
+		[Test]
+		public void DeleteByTableName([DataSources] string context)
+		{
+			var tableName  = InsertTests.GetTableName(context, "1a");
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<Person>(tableName))
+			{
+				var iTable = (ITable<Person>)table;
+				Assert.AreEqual(tableName, iTable.TableName);
+				Assert.AreEqual(null,      iTable.SchemaName);
+
+				var person = new Person()
+				{
+					FirstName = "Steven",
+					LastName = "King",
+					Gender = Gender.Male,
+				};
+
+				// insert a row into the table
+				db.Insert(person, tableName);
+				var newCount = table.Count();
+				Assert.AreEqual(1, newCount);
+
+				var personForDelete = table.Single();
+
+				db.Delete(personForDelete, tableName);
+
+				Assert.AreEqual(0, table.Count());
+			}
+		}
+
+		[Test]
+		public async Task DeleteByTableNameAsync([DataSources] string context)
+		{
+			const string? schemaName = null;
+			var tableName  = InsertTests.GetTableName(context, "30");
+
+			using (var db = GetDataContext(context))
+			{
+				await db.DropTableAsync<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists:false);
+
+				try
+				{
+					var table = await db.CreateTableAsync<Person>(tableName, schemaName: schemaName);
+
+					Assert.AreEqual(tableName, table.TableName);
+					Assert.AreEqual(schemaName, table.SchemaName);
+
+					var person = new Person()
+					{
+						FirstName = "Steven",
+						LastName  = "King",
+						Gender    = Gender.Male,
+					};
+
+					// insert a row into the table
+					await db.InsertAsync(person, tableName: tableName, schemaName: schemaName);
+					var newCount = await table.CountAsync();
+					Assert.AreEqual(1, newCount);
+
+					var personForDelete = await table.SingleAsync();
+
+					await db.DeleteAsync(personForDelete, tableName: tableName, schemaName: schemaName);
+
+					Assert.AreEqual(0, await table.CountAsync());
+
+					await table.DropAsync();
+				}
+				catch
+				{
+					await db.DropTableAsync<Person>(tableName, schemaName: schemaName);
+					throw;
 				}
 			}
 		}

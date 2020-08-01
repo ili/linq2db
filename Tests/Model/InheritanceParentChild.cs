@@ -1,9 +1,4 @@
 ﻿using LinqToDB.Mapping;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Tests.Model
 {
@@ -18,10 +13,10 @@ namespace Tests.Model
 	[InheritanceMapping(Code = 2,    Type = typeof(InheritanceParent2))]
 	public class InheritanceParentBase : TInheritance
 	{
-		[PrimaryKey]                     public int  InheritanceParentId  { get; set; }
-		[Column(IsDiscriminator = true)] public int? TypeDiscriminator    { get; set; }
+		[PrimaryKey]                     public int  InheritanceParentId { get; set; }
+		[Column(IsDiscriminator = true)] public int? TypeDiscriminator   { get; set; }
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			var other = obj as InheritanceParentBase;
 			if (other == null)
@@ -30,9 +25,10 @@ namespace Tests.Model
 			if (ReferenceEquals(this, other))
 				return true;
 
-			return InheritanceParentId == other.InheritanceParentId
-				&& TypeDiscriminator   == other.TypeDiscriminator
-				&& GetType()           == other.GetType();
+			return
+				InheritanceParentId == other.InheritanceParentId &&
+				TypeDiscriminator   == other.TypeDiscriminator   &&
+				GetType()           == other.GetType();
 		}
 
 		public override int GetHashCode()
@@ -47,7 +43,7 @@ namespace Tests.Model
 
 	public class InheritanceParent2 : InheritanceParentBase
 	{
-		[Column] public string Name { get; set; }
+		[Column] public string? Name { get; set; }
 	}
 
 	[Table("InheritanceChild")]
@@ -61,9 +57,9 @@ namespace Tests.Model
 		[Column]                         public int  InheritanceParentId { get; set; }
 
 		[Association(ThisKey = "InheritanceParentId", OtherKey = "InheritanceParentId")]
-		public InheritanceParentBase Parent { get; set; } 
+		public InheritanceParentBase Parent { get; set; } = null!;
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			var other = obj as InheritanceChildBase;
 			if (other == null)
@@ -89,7 +85,6 @@ namespace Tests.Model
 
 	public class InheritanceChild2 : InheritanceChildBase
 	{
-		[Column] public string Name { get; set; }
+		[Column] public string? Name { get; set; }
 	}
-
 }

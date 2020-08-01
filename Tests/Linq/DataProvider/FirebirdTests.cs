@@ -18,16 +18,14 @@ using NUnit.Framework;
 namespace Tests.DataProvider
 {
 	using System.Globalization;
-
+	using System.Threading.Tasks;
 	using Model;
 
 	[TestFixture]
 	public class FirebirdTests : DataProviderTestBase
 	{
-		const string CurrentProvider = ProviderName.Firebird;
-
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestParameters(string context)
+		[Test]
+		public void TestParameters([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -40,8 +38,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestDataTypes(string context)
+		[Test]
+		public void TestDataTypes([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -79,7 +77,7 @@ namespace Tests.DataProvider
 					"real"
 				}.Except(skipTypes))
 			{
-				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
+				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object?)expectedValue;
 
 				var sql = sqlValue == null ?
 					"SELECT NULL FROM Dual" :
@@ -133,8 +131,8 @@ namespace Tests.DataProvider
 			TestNumeric<T?>(conn, (T?)null,      dataType);
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestNumerics(string context)
+		[Test]
+		public void TestNumerics([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -184,8 +182,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestDateTime(string context)
+		[Test]
+		public void TestDateTime([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -200,8 +198,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestChar(string context)
+		[Test]
+		public void TestChar([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -233,8 +231,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestString(string context)
+		[Test]
+		public void TestString([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -255,13 +253,13 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM Dual", DataParameter.NText   ("p", "123")), Is.EqualTo("123"));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM Dual", DataParameter.Create  ("p", "123")), Is.EqualTo("123"));
 
-				Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM Dual", DataParameter.Create("p", (string)null)), Is.EqualTo(null));
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM Dual", DataParameter.Create("p", (string?)null)), Is.EqualTo(null));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM Dual", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestBinary(string context)
+		[Test]
+		public void TestBinary([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			var arr1 = new byte[] { 50, 51         };
 			var arr2 = new byte[] { 49, 50, 51, 52 };
@@ -288,8 +286,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestGuid(string context)
+		[Test]
+		public void TestGuid([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -308,8 +306,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestGuid2(string context)
+		[Test]
+		public void TestGuid2([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var conn = GetDataContext(context))
 			{
@@ -326,8 +324,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestXml(string context)
+		[Test]
+		public void TestXml([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -352,8 +350,8 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestEnum1(string context)
+		[Test]
+		public void TestEnum1([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -364,8 +362,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestEnum2(string context)
+		[Test]
+		public void TestEnum2([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -374,12 +372,12 @@ namespace Tests.DataProvider
 
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM Dual", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM Dual", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
-				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM Dual", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM Dual", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()!(TestEnum.AA) }), Is.EqualTo("A"));
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird)]
-		public void SequenceInsert(string context)
+		[Test]
+		public void SequenceInsert([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -394,8 +392,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird)]
-		public void SequenceInsertWithIdentity(string context)
+		[Test]
+		public void SequenceInsertWithIdentity([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -418,8 +416,8 @@ namespace Tests.DataProvider
 			[Column]     public DateTime timestampDataType { get; set; } // TIMESTAMP
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird)]
-		public void DataProviderTest(string context)
+		[Test]
+		public void DataProviderTest([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var con = new FbConnection(DataConnection.GetConnectionString(context)))
 			using (var dbm = new DataConnection(new FirebirdDataProvider(), con))
@@ -432,11 +430,11 @@ namespace Tests.DataProvider
 		class MyLinqDataType
 		{
 			[Column]
-			public byte[] BinaryValue { get; set; }
+			public byte[]? BinaryValue { get; set; }
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Firebird)]
-		public void ForcedInlineParametersInSelectClauseTest(string context)
+		[Test]
+		public void ForcedInlineParametersInSelectClauseTest([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -447,28 +445,149 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void BulkCopyLinqTypes(string context)
+		[Test]
+		public void BulkCopyLinqTypes([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
 				using (var db = new DataConnection(context))
 				{
-					db.BulkCopy(
-						new BulkCopyOptions { BulkCopyType = bulkCopyType },
-						Enumerable.Range(0, 10).Select(n =>
-							new LinqDataTypes
-							{
-								ID            = 4000 + n,
-								MoneyValue    = 1000m + n,
-								DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
-								BoolValue     = true,
-								GuidValue     = Guid.NewGuid(),
-								SmallIntValue = (short)n
-							}
-						));
+					try
+					{
+						db.BulkCopy(
+							new BulkCopyOptions { BulkCopyType = bulkCopyType },
+							Enumerable.Range(0, 10).Select(n =>
+								new LinqDataTypes
+								{
+									ID            = 4000 + n,
+									MoneyValue    = 1000m + n,
+									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+									BoolValue     = true,
+									GuidValue     = Guid.NewGuid(),
+									SmallIntValue = (short)n
+								}
+							));
+					}
+					finally
+					{
+						db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+					}
+				}
+			}
+		}
 
-					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+		[Test]
+		public async Task BulkCopyLinqTypesAsync([IncludeDataSources(TestProvName.AllFirebird)] string context)
+		{
+			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
+			{
+				using (var db = new DataConnection(context))
+				{
+					try
+					{
+						await db.BulkCopyAsync(
+							new BulkCopyOptions { BulkCopyType = bulkCopyType },
+							Enumerable.Range(0, 10).Select(n =>
+								new LinqDataTypes
+								{
+									ID            = 4000 + n,
+									MoneyValue    = 1000m + n,
+									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+									BoolValue     = true,
+									GuidValue     = Guid.NewGuid(),
+									SmallIntValue = (short)n
+								}
+							));
+					}
+					finally
+					{
+						await db.GetTable<LinqDataTypes>().DeleteAsync(p => p.ID >= 4000);
+					}
+				}
+			}
+		}
+
+		[Table]
+		public class Issue76Entity
+		{
+			[Column] public long    Id          { get; set; }
+			[Column] public string? Caption     { get; set; }
+			[Column] public long?   ParentId    { get; set; }
+
+			         public bool    HasChildren { get; set; }
+		}
+
+		[Test]
+		public void Issue76([IncludeDataSources(TestProvName.AllFirebird)] string context)
+		{
+			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Quote))
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<Issue76Entity>())
+			{
+				var folders = db.GetTable<Issue76Entity>().Select(f => new Issue76Entity()
+				{
+					Id          = f.Id,
+					Caption     = f.Caption,
+					HasChildren = db.GetTable<Issue76Entity>().Any(f2 => f2.ParentId == f.Id)
+				});
+
+				folders =
+					from folder in folders
+					join folder2 in db.GetTable<Issue76Entity>() on folder.ParentId equals folder2.Id
+					where folder2.Caption == "dewde"
+					select folder;
+
+
+				Assert.DoesNotThrow(() => folders.ToList());
+			}
+		}
+
+		[Table]
+		class TestDropTable
+		{
+			[Column]
+			public int Field;
+		}
+
+		[Table]
+		class TestIdentityDropTable
+		{
+			[Column, Identity]
+			public int Field;
+		}
+
+		[Test]
+		public void DropTableTest(
+			[IncludeDataSources(true, TestProvName.AllFirebird)] string context,
+			[Values] FirebirdIdentifierQuoteMode quoteMode,
+			[Values] bool withIdentity,
+			[Values] bool throwIfNotExists)
+		{
+			using (new FirebirdQuoteMode(quoteMode))
+			using (var db = GetDataContext(context))
+			{
+				if (withIdentity)
+					test<TestIdentityDropTable>();
+				else
+					test<TestDropTable>();
+
+				void test<TTable>()
+				{
+					// first drop deletes table if it remains from previous test run
+					// second drop deletes non-existing table
+					db.DropTable<TTable>(throwExceptionIfNotExists: false);
+
+					try
+					{
+						db.DropTable<TTable>(throwExceptionIfNotExists: throwIfNotExists);
+					}
+					catch when(throwIfNotExists)
+					{
+					}
+
+
+					db.CreateTable<TTable>();
+					db.DropTable<TTable>(throwExceptionIfNotExists: throwIfNotExists);
 				}
 			}
 		}

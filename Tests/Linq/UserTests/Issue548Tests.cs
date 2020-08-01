@@ -1,12 +1,11 @@
-﻿using LinqToDB.Extensions;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.UserTests
 {
@@ -26,11 +25,11 @@ namespace Tests.UserTests
 
 		[Test]
 		public void Test1()
-		{ 
+		{
 			var ms      = new MappingSchema();
 			var builder = ms.GetFluentMappingBuilder();
 
-			Assert.IsEmpty(ms.GetAttributes<PrimaryKeyAttribute>(typeof(TestEntity).GetPropertyEx("Id")));
+			Assert.IsEmpty(ms.GetAttributes<PrimaryKeyAttribute>(typeof(TestEntity), typeof(TestEntity).GetProperty("Id")!));
 
 			const int taskCount = 10;
 
@@ -54,14 +53,15 @@ namespace Tests.UserTests
 			}
 		}
 
+		[SkipCI]
 		[Test]
 		public void Test2()
 		{
 			var ms      = new MappingSchema();
 			var builder = ms.GetFluentMappingBuilder();
 
-			Assert.IsEmpty(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity).GetPropertyEx("Id")));
-			Assert.IsEmpty(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity).GetPropertyEx("Value")));
+			Assert.IsEmpty(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity), typeof(TestEntity).GetProperty("Id")!));
+			Assert.IsEmpty(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity), typeof(TestEntity).GetProperty("Value")!));
 
 			const int taskCount = 2;
 
@@ -109,7 +109,7 @@ namespace Tests.UserTests
 		}
 
 		/// <summary>
-		/// This will iterate through <see cref="MappingSchema.MetadataReaders"/>, 
+		/// This will iterate through <see cref="MappingSchema.MetadataReaders"/>,
 		/// and had a chance to fail on <see cref="MappingSchema._metadataReaders"/> == null
 		/// </summary>
 		/// <param name="ms"></param>
@@ -120,7 +120,7 @@ namespace Tests.UserTests
 			{
 				semaphore.WaitOne();
 
-				Assert.IsEmpty(ms.GetAttributes<PrimaryKeyAttribute>(typeof(TestEntity).GetPropertyEx("Id")));
+				Assert.IsEmpty(ms.GetAttributes<PrimaryKeyAttribute>(typeof(TestEntity), typeof(TestEntity).GetProperty("Id")!));
 			}
 			finally
 			{
@@ -147,8 +147,8 @@ namespace Tests.UserTests
 				builder.Entity<TestEntity>().Property(_ => _.Id).IsColumn();
 				semaphore2.WaitOne();
 
-				Assert.IsNotEmpty(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity).GetPropertyEx("Id")));
-				Assert.IsNotEmpty(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity).GetPropertyEx("Value")));
+				Assert.IsNotEmpty(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity), typeof(TestEntity).GetProperty("Id")!));
+				Assert.IsNotEmpty(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity), typeof(TestEntity).GetProperty("Value")!));
 
 			}
 			finally
@@ -175,8 +175,8 @@ namespace Tests.UserTests
 				builder.Entity<TestEntity>().Property(_ => _.Value).IsColumn();
 				semaphore2.WaitOne();
 
-				Assert.IsNotEmpty(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity).GetPropertyEx("Id")));
-				Assert.IsNotEmpty(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity).GetPropertyEx("Value")));
+				Assert.IsNotEmpty(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity), typeof(TestEntity).GetProperty("Id")!));
+				Assert.IsNotEmpty(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity), typeof(TestEntity).GetProperty("Value")!));
 			}
 			finally
 			{

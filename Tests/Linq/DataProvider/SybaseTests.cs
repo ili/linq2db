@@ -14,17 +14,18 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using System.Collections.Generic;
+	using System.Diagnostics.CodeAnalysis;
 	using System.Globalization;
-
+	using System.Threading.Tasks;
+	using LinqToDB.Tools.Comparers;
 	using Model;
 
 	[TestFixture]
 	public class SybaseTests : TestBase
 	{
-		const string CurrentProvider = ProviderName.Sybase;
-
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestParameters(string context)
+		[Test]
+		public void TestParameters([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -37,25 +38,25 @@ namespace Tests.DataProvider
 			}
 		}
 
-		static void TestType<T>(DataConnection connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
+		static void TestType<T>(DataConnection connection, string dataTypeName, [DisallowNull] T value, string tableName = "AllTypes", bool convertToString = false)
 		{
 			Assert.That(connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 1", dataTypeName, tableName)),
 				Is.EqualTo(connection.MappingSchema.GetDefaultValue(typeof(T))));
 
-			object actualValue   = connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 2", dataTypeName, tableName));
+			object actualValue   = connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 2", dataTypeName, tableName))!;
 			object expectedValue = value;
 
 			if (convertToString)
 			{
-				actualValue   = actualValue.  ToString();
-				expectedValue = expectedValue.ToString();
+				actualValue   = actualValue.  ToString()!;
+				expectedValue = expectedValue.ToString()!;
 			}
 
 			Assert.That(actualValue, Is.EqualTo(expectedValue));
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestDataTypes(string context)
+		[Test]
+		public void TestDataTypes([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -119,7 +120,7 @@ namespace Tests.DataProvider
 					"real"
 				}.Except(skipTypes))
 			{
-				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
+				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object?)expectedValue;
 
 				var sql = string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1})", sqlValue ?? "NULL", sqlType);
 
@@ -150,8 +151,8 @@ namespace Tests.DataProvider
 			TestNumeric<T?>(conn, (T?)null,      dataType, "bit");
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestNumerics(string context)
+		[Test]
+		public void TestNumerics([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -204,8 +205,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestDate(string context)
+		[Test]
+		public void TestDate([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -218,8 +219,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestSmallDateTime(string context)
+		[Test]
+		public void TestSmallDateTime([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -233,8 +234,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestDateTime(string context)
+		[Test]
+		public void TestDateTime([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -249,8 +250,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestTimeSpan(string context)
+		[Test]
+		public void TestTimeSpan([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -266,8 +267,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestChar(string context)
+		[Test]
+		public void TestChar([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -310,48 +311,94 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestString(string context)
+		[Test]
+		public void TestString([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char)"),          Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20))"),      Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as char(20))"),      Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char)"),                       Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20))"),                   Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20))"),                   Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as char(20))"),                   Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar)"),       Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(20))"),   Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as varchar(20))"),   Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar)"),                    Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(20))"),                Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as varchar(20))"),                Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as text)"),          Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as text)"),          Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as text)"),                       Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as text)"),                       Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar)"),         Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar(20))"),     Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nchar(20))"),     Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar)"),                      Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar(20))"),                  Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nchar(20))"),                  Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar)"),      Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar(20))"),  Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nvarchar(20))"),  Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar)"),                   Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar(20))"),               Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nvarchar(20))"),               Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as unitext)"),       Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as unitext)"),       Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as unitext)"),                    Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as unitext)"),                    Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Char    ("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.VarChar ("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Text    ("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NChar   ("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NVarChar("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NText   ("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create  ("p", "123")), Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Char    ("p", "123")),      Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.VarChar ("p", "123")),      Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Text    ("p", "123")),      Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NChar   ("p", "123")),      Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NVarChar("p", "123")),      Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NText   ("p", "123")),      Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create  ("p", "123")),      Is.EqualTo("123"));
 
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", (string)null)), Is.EqualTo(null));
-				Assert.That(conn.Execute<string>("SELECT @p", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", (string?)null)),        Is.EqualTo(null));
+				Assert.That(conn.Execute<string>("SELECT @p", new DataParameter { Name = "p", Value = "1" }),   Is.EqualTo("1"));
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestBinary(string context)
+		public static IEnumerable<Tuple<string, string>> StringTestCases
+		{
+			get
+			{
+				yield return Tuple.Create("'\u2000\u2001\u2002\u2003\uabab\u03bctесt", "u&'''\\2000\\2001\\2002\\2003\\abab\\03bctесt'");
+				// this case fails for parameters, because driver terminates parameter value at \0 character
+				//yield return Tuple.Create("\0test", "char(0) + 'test'");
+			}
+		}
+
+		[SkipCI("We need to configure UTF-8 encoding for used docker image")]
+		[Test]
+		public void TestUnicodeString(
+			[IncludeDataSources(TestProvName.AllSybase)] string context,
+			[ValueSource(nameof(StringTestCases))] Tuple<string,string> testCase)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var value = testCase.Item1;
+				var literal = testCase.Item2;
+
+				// test raw literals queries
+				Assert.That(conn.Execute<string>($"SELECT Cast({literal} as char)"),               Is.EqualTo(value));
+				Assert.That(conn.Execute<string>($"SELECT Cast({literal} as varchar)"),            Is.EqualTo(value));
+				Assert.That(conn.Execute<string>($"SELECT Cast({literal} as text)"),               Is.EqualTo(value));
+				Assert.That(conn.Execute<string>($"SELECT Cast({literal} as nchar)"),              Is.EqualTo(value));
+				Assert.That(conn.Execute<string>($"SELECT Cast({literal} as nvarchar)"),           Is.EqualTo(value));
+				Assert.That(conn.Execute<string>($"SELECT Cast({literal} as unitext)"),            Is.EqualTo(value));
+
+				// test parameters
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Char    ("p", value)), Is.EqualTo(value));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.VarChar ("p", value)), Is.EqualTo(value));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Text    ("p", value)), Is.EqualTo(value));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NChar   ("p", value)), Is.EqualTo(value));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NVarChar("p", value)), Is.EqualTo(value));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NText   ("p", value)), Is.EqualTo(value));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create  ("p", value)), Is.EqualTo(value));
+
+				// test default linq2db behavior for parameter and literal
+				Assert.That(conn.Select(() => value), Is.EqualTo(value));
+				conn.InlineParameters = true;
+				Assert.That(conn.Select(() => value), Is.EqualTo(value));
+			}
+		}
+
+		[Test]
+		public void TestBinary([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			var arr1 = new byte[] { 57, 48        };
 			var arr2 = new byte[] { 57, 48, 0, 0  };
@@ -381,8 +428,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestGuid(string context)
+		[Test]
+		public void TestGuid([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -401,8 +448,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestTimestamp(string context)
+		[Test]
+		public void TestTimestamp([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -413,8 +460,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestXml(string context)
+		[Test]
+		public void TestXml([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -439,8 +486,8 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestEnum1(string context)
+		[Test]
+		public void TestEnum1([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -451,8 +498,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void TestEnum2(string context)
+		[Test]
+		public void TestEnum2([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -461,34 +508,575 @@ namespace Tests.DataProvider
 
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
-				Assert.That(conn.Execute<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
+				Assert.That(conn.Execute<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()!(TestEnum.AA) }), Is.EqualTo("A"));
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void BulkCopyLinqTypes(string context)
+		[Test]
+		public void BulkCopyLinqTypes([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
 				using (var db = new DataConnection(context))
 				{
-					db.BulkCopy(
-						new BulkCopyOptions { BulkCopyType = bulkCopyType },
-						Enumerable.Range(0, 10).Select(n =>
-							new LinqDataTypes
-							{
-								ID            = 4000 + n,
-								MoneyValue    = 1000m + n,
-								DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
-								BoolValue     = true,
-								GuidValue     = Guid.NewGuid(),
-								SmallIntValue = (short)n
-							}
-						));
-
-					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+					try
+					{
+						db.BulkCopy(
+							new BulkCopyOptions { BulkCopyType = bulkCopyType },
+							Enumerable.Range(0, 10).Select(n =>
+								new LinqDataTypes
+								{
+									ID            = 4000 + n,
+									MoneyValue    = 1000m + n,
+									DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
+									BoolValue     = true,
+									GuidValue     = Guid.NewGuid(),
+									SmallIntValue = (short)n
+								}
+							));
+					}
+					finally
+					{
+						db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+					}
 				}
 			}
 		}
+
+		[Test]
+		public async Task BulkCopyLinqTypesAsync([IncludeDataSources(TestProvName.AllSybase)] string context)
+		{
+			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
+			{
+				using (var db = new DataConnection(context))
+				{
+					try
+					{
+						await db.BulkCopyAsync(
+							new BulkCopyOptions { BulkCopyType = bulkCopyType },
+							Enumerable.Range(0, 10).Select(n =>
+								new LinqDataTypes
+								{
+									ID            = 4000 + n,
+									MoneyValue    = 1000m + n,
+									DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
+									BoolValue     = true,
+									GuidValue     = Guid.NewGuid(),
+									SmallIntValue = (short)n
+								}
+							));
+					}
+					finally
+					{
+						await db.GetTable<LinqDataTypes>().DeleteAsync(p => p.ID >= 4000);
+					}
+				}
+			}
+		}
+
+		[Table]
+		class Issue1707
+		{
+			public static IEqualityComparer<Issue1707> Comparer = ComparerBuilder.GetEqualityComparer<Issue1707>();
+			[Column]
+			public int Id { get; set; }
+
+			[Column]
+			public TimeSpan Time { get; set; }
+
+			[Column(DataType = DataType.Time)]
+			public DateTime Time2 { get; set; }
+
+			[Column]
+			public DateTime DateTime { get; set; }
+
+			[Column]
+			public TimeSpan? TimeN { get; set; }
+
+			[Column(DataType = DataType.Time)]
+			public DateTime? Time2N { get; set; }
+
+			[Column]
+			public DateTime? DateTimeN { get; set; }
+		}
+
+		[Test]
+		public void Issue1707Test([IncludeDataSources(true, TestProvName.AllSybase)] string context, [Values] bool useParameters)
+		{
+			var testIntervals = new[]
+			{
+				TimeSpan.Zero,
+				TimeSpan.FromMinutes(123),
+				TimeSpan.FromMinutes(-123),
+				TimeSpan.FromMinutes(1567),
+				TimeSpan.FromMinutes(-1567)
+			};
+
+			var start    = new DateTime(1900, 1, 1);
+			var testData = new List<Issue1707>();
+
+			for (var i = 0; i < testIntervals.Length; i++)
+			{
+				var ts = testIntervals[i];
+
+				testData.Add(new Issue1707()
+				{
+					Id        = i + 1,
+					Time      = ts,
+					TimeN     = ts,
+					Time2     = start + ts,
+					Time2N    = start + ts,
+					DateTime  = start + ts,
+					DateTimeN = start + ts
+				});
+			}
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<Issue1707>())
+			{
+				db.InlineParameters = !useParameters;
+
+				foreach (var record in testData)
+				{
+					table.Insert(() => new Issue1707()
+					{
+						Id        = record.Id,
+						Time      = record.Time,
+						TimeN     = record.TimeN,
+						Time2     = record.Time2,
+						Time2N    = record.Time2N,
+						DateTime  = record.DateTime,
+						DateTimeN = record.DateTimeN,
+					});
+				}
+
+				var results = table.OrderBy(_ => _.Id);
+
+				AreEqual(testData.Select(fixRecord), results, Issue1707.Comparer);
+			}
+
+			Issue1707 fixRecord(Issue1707 record)
+			{
+				record.Time   = fixTime(record.Time);
+				record.TimeN  = fixTime(record.TimeN!.Value);
+				record.Time2  = new DateTime() + fixTime(record.Time2 - start);
+				record.Time2N = new DateTime() + fixTime(record.Time2N!.Value - start);
+
+				return record;
+			}
+
+			TimeSpan fixTime(TimeSpan time)
+			{
+				if (time < TimeSpan.Zero)
+					time = TimeSpan.FromDays(1 - time.Days) + time;
+				return time - TimeSpan.FromDays(time.Days);
+			}
+		}
+
+		#region BulkCopy
+		[Table("AllTypes")]
+		public partial class AllType
+		{
+			[PrimaryKey, Identity] public int ID { get; set; }
+
+			[Column] public long?     bigintDataType         { get; set; }
+			[Column] public ulong?    uBigintDataType        { get; set; }
+			[Column] public decimal?  numericDataType        { get; set; }
+			[Column] public bool      bitDataType            { get; set; }
+			[Column] public short?    smallintDataType       { get; set; }
+			[Column] public ushort?   uSmallintDataType      { get; set; }
+			[Column] public decimal?  decimalDataType        { get; set; }
+			[Column] public decimal?  moneyDataType          { get; set; }
+			[Column] public decimal?  smallmoneyDataType     { get; set; }
+			[Column] public int?      intDataType            { get; set; }
+			[Column] public uint?     uIntDataType           { get; set; }
+			[Column] public byte?     tinyintDataType        { get; set; }
+			[Column] public double?   floatDataType          { get; set; }
+			[Column] public float?    realDataType           { get; set; }
+			[Column] public DateTime? datetimeDataType       { get; set; }
+			[Column] public DateTime? smalldatetimeDataType  { get; set; }
+			[Column] public DateTime? dateDataType           { get; set; }
+			[Column] public TimeSpan? timeDataType           { get; set; }
+			[Column] public char?     charDataType           { get; set; }
+			[Column] public string?   char20DataType         { get; set; }
+			[Column] public string?   varcharDataType        { get; set; }
+			[Column] public string?   textDataType           { get; set; }
+			[Column] public char?     ncharDataType          { get; set; }
+			[Column] public string?   nvarcharDataType       { get; set; }
+			[Column] public string?   ntextDataType          { get; set; }
+			[Column] public byte[]?   binaryDataType         { get; set; }
+			[Column] public byte[]?   varbinaryDataType      { get; set; }
+			[Column] public byte[]?   imageDataType          { get; set; }
+			[Column] public byte[]?   timestampDataType      { get; set; }
+		}
+
+		static readonly AllType[] _allTypeses =
+		{
+#region data
+			new AllType
+			{
+				ID                       = 700,
+				bigintDataType           = 1,
+				uBigintDataType          = 2,
+				numericDataType          = 1.6m,
+				bitDataType              = true,
+				smallintDataType         = 1,
+				uSmallintDataType        = 2,
+				decimalDataType          = 1.1m,
+				moneyDataType            = 1.2m,
+				smallmoneyDataType       = 1.3m,
+				intDataType              = 1,
+				uIntDataType             = 2,
+				tinyintDataType          = 1,
+				floatDataType            = 1.4d,
+				realDataType             = 1.5f,
+				datetimeDataType         = new DateTime(2014, 12, 17, 21, 2, 58, 123),
+				smalldatetimeDataType    = new DateTime(2014, 12, 17, 21, 3, 0),
+				dateDataType             = new DateTime(2014, 12, 17),
+				timeDataType             = new TimeSpan(0, 10, 11, 12),
+				charDataType             = 'E',
+				char20DataType           = "Eboi",
+				varcharDataType          = "E",
+				textDataType             = "E",
+				ncharDataType            = 'Ё',
+				nvarcharDataType         = "Ё",
+				ntextDataType            = "Ё",
+				binaryDataType           = new byte[] { 1 },
+				varbinaryDataType        = new byte[] { 1 },
+				imageDataType            = new byte[] { 1, 2, 3, 4, 5 },
+				timestampDataType        = new byte[] { 5, 4, 3, 2, 1 },
+			},
+			new AllType
+			{
+				ID                       = 701,
+			},
+#endregion
+		};
+
+		[Table("LinqDataTypes")]
+		class DataTypes
+		{
+			[Column] public int       ID;
+			[Column] public decimal?  MoneyValue;
+			[Column] public DateTime? DateTimeValue;
+			[Column] public DateTime? DateTimeValue2;
+			[Column] public bool      BoolValue;
+			[Column] public Guid?     GuidValue;
+			[Column] public Binary?   BinaryValue;
+			[Column] public short?    SmallIntValue;
+			[Column] public int?      IntValue;
+			[Column] public long?     BigIntValue;
+			[Column] public string?   StringValue;
+		}
+
+		[Test]
+		public void BulkCopyLinqTypesMultipleRows([IncludeDataSources(TestProvName.AllSybase)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				try
+				{
+					db.BulkCopy(
+						new BulkCopyOptions
+						{
+							BulkCopyType = BulkCopyType.MultipleRows,
+							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
+						},
+						Enumerable.Range(0, 10).Select(n =>
+							new DataTypes
+							{
+								ID             = 4000 + n,
+								MoneyValue     = 1000m + n,
+								DateTimeValue  = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+								DateTimeValue2 = new DateTime(2001, 1, 10, 1, 11, 21, 100),
+								BoolValue      = true,
+								GuidValue      = Guid.NewGuid(),
+								BinaryValue    = new byte[] { (byte)n },
+								SmallIntValue  = (short)n,
+								IntValue       = n,
+								BigIntValue    = n,
+								StringValue    = n.ToString(),
+							}
+						));
+				}
+				finally
+				{
+					db.GetTable<DataTypes>().Delete(p => p.ID >= 4000);
+				}
+			}
+		}
+
+		[Test]
+		public async Task BulkCopyLinqTypesMultipleRowsAsync([IncludeDataSources(TestProvName.AllSybase)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				try
+				{
+					await db.BulkCopyAsync(
+						new BulkCopyOptions
+						{
+							BulkCopyType = BulkCopyType.MultipleRows,
+							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
+						},
+						Enumerable.Range(0, 10).Select(n =>
+							new DataTypes
+							{
+								ID             = 4000 + n,
+								MoneyValue     = 1000m + n,
+								DateTimeValue  = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+								DateTimeValue2 = new DateTime(2001, 1, 10, 1, 11, 21, 100),
+								BoolValue      = true,
+								GuidValue      = Guid.NewGuid(),
+								BinaryValue    = new byte[] { (byte)n },
+								SmallIntValue  = (short)n,
+								IntValue       = n,
+								BigIntValue    = n,
+								StringValue    = n.ToString(),
+							}
+						));
+				}
+				finally
+				{
+					await db.GetTable<DataTypes>().DeleteAsync(p => p.ID >= 4000);
+				}
+			}
+		}
+
+		[Test]
+		public void BulkCopyLinqTypesProviderSpecific([IncludeDataSources(TestProvName.AllSybase)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				try
+				{
+					db.BulkCopy(
+						new BulkCopyOptions
+						{
+							BulkCopyType = BulkCopyType.ProviderSpecific,
+							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
+						},
+						Enumerable.Range(0, 10).Select(n =>
+							new DataTypes
+							{
+								ID             = 4000 + n,
+								MoneyValue     = 1000m + n,
+								DateTimeValue  = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+								DateTimeValue2 = new DateTime(2001, 1, 10, 1, 11, 21, 100),
+								BoolValue      = true,
+								GuidValue      = Guid.NewGuid(),
+								BinaryValue    = new byte[] { (byte)n },
+								SmallIntValue  = (short)n,
+								IntValue       = n,
+								BigIntValue    = n,
+								StringValue    = n.ToString(),
+							}
+						));
+				}
+				finally
+				{
+					db.GetTable<DataTypes>().Delete(p => p.ID >= 4000);
+				}
+			}
+		}
+
+		[Test]
+		public async Task BulkCopyLinqTypesProviderSpecificAsync([IncludeDataSources(TestProvName.AllSybase)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				try
+				{
+					await db.BulkCopyAsync(
+						new BulkCopyOptions
+						{
+							BulkCopyType = BulkCopyType.ProviderSpecific,
+							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
+						},
+						Enumerable.Range(0, 10).Select(n =>
+							new DataTypes
+							{
+								ID             = 4000 + n,
+								MoneyValue     = 1000m + n,
+								DateTimeValue  = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+								DateTimeValue2 = new DateTime(2001, 1, 10, 1, 11, 21, 100),
+								BoolValue      = true,
+								GuidValue      = Guid.NewGuid(),
+								BinaryValue    = new byte[] { (byte)n },
+								SmallIntValue  = (short)n,
+								IntValue       = n,
+								BigIntValue    = n,
+								StringValue    = n.ToString(),
+							}
+						));
+				}
+				finally
+				{
+					await db.GetTable<DataTypes>().DeleteAsync(p => p.ID >= 4000);
+				}
+			}
+		}
+
+		void BulkCopyAllTypes(string context, BulkCopyType bulkCopyType)
+		{
+			var hasBitBug = context == ProviderName.Sybase && bulkCopyType == BulkCopyType.ProviderSpecific;
+			using (var db = new DataConnection(context))
+			{
+				db.CommandTimeout = 60;
+
+				db.GetTable<AllType>().Delete(p => p.ID >= _allTypeses[0].ID);
+
+				try
+				{
+					db.BulkCopy(
+						new BulkCopyOptions
+						{
+							BulkCopyType       = bulkCopyType,
+							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied),
+							KeepIdentity       = true,
+						},
+						_allTypeses);
+
+					var ids = _allTypeses.Select(at => at.ID).ToArray();
+
+					var list = db.GetTable<AllType>().Where(t => ids.Contains(t.ID)).OrderBy(t => t.ID).ToList();
+
+					Assert.That(list.Count, Is.EqualTo(_allTypeses.Length));
+
+					for (var i = 0; i < list.Count; i++)
+						CompareObject(db.MappingSchema, list[i], _allTypeses[i], hasBitBug);
+				}
+				finally
+				{
+					db.GetTable<AllType>().Delete(p => p.ID >= _allTypeses[0].ID);
+				}
+			}
+		}
+
+		async Task BulkCopyAllTypesAsync(string context, BulkCopyType bulkCopyType)
+		{
+			var hasBitBug = context == ProviderName.Sybase && bulkCopyType == BulkCopyType.ProviderSpecific;
+			using (var db = new DataConnection(context))
+			{
+				db.CommandTimeout = 60;
+
+				db.GetTable<AllType>().Delete(p => p.ID >= _allTypeses[0].ID);
+
+				try
+				{
+					await db.BulkCopyAsync(
+						new BulkCopyOptions
+						{
+							BulkCopyType = bulkCopyType,
+							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied),
+							KeepIdentity = true,
+						},
+						_allTypeses);
+
+					var ids = _allTypeses.Select(at => at.ID).ToArray();
+
+					var list = db.GetTable<AllType>().Where(t => ids.Contains(t.ID)).OrderBy(t => t.ID).ToList();
+
+					Assert.That(list.Count, Is.EqualTo(_allTypeses.Length));
+
+					for (var i = 0; i < list.Count; i++)
+						CompareObject(db.MappingSchema, list[i], _allTypeses[i], hasBitBug);
+				}
+				finally
+				{
+					await db.GetTable<AllType>().DeleteAsync(p => p.ID >= _allTypeses[0].ID);
+				}
+			}
+		}
+
+		void CompareObject<T>(MappingSchema mappingSchema, [DisallowNull] T actual, [DisallowNull] T test, bool hasBitBug)
+		{
+			var ed = mappingSchema.GetEntityDescriptor(typeof(T));
+
+			foreach (var column in ed.Columns)
+			{
+				var actualValue = column.GetValue(actual);
+				var testValue   = column.GetValue(test);
+
+				// timestampDataType autogenerated
+				if (column.MemberName == "timestampDataType")
+					continue;
+
+				if (hasBitBug && column.MemberName == "bitDataType")
+				{
+					// this is a bug in ASE bulk copy implementation:
+					// for first record it inserts false into bit field
+					// assert it so we will know when it fixed
+					Assert.AreEqual(false, actualValue);
+					continue;
+				}
+
+				Assert.That(actualValue, Is.EqualTo(testValue),
+					actualValue is DateTimeOffset
+						? "Column  : {0} {1:yyyy-MM-dd HH:mm:ss.fffffff zzz} {2:yyyy-MM-dd HH:mm:ss.fffffff zzz}"
+						: "Column  : {0}",
+					column.MemberName,
+					actualValue,
+					testValue);
+			}
+		}
+
+		[SkipCI("We need to configure UTF-8 encoding for used docker image")]
+		[Test]
+		public void BulkCopyAllTypesMultipleRows([IncludeDataSources(TestProvName.AllSybase)] string context)
+		{
+			BulkCopyAllTypes(context, BulkCopyType.MultipleRows);
+		}
+
+		[SkipCI("We need to configure UTF-8 encoding for used docker image")]
+		[Test]
+		public void BulkCopyAllTypesProviderSpecific([IncludeDataSources(TestProvName.AllSybase)] string context)
+		{
+			BulkCopyAllTypes(context, BulkCopyType.ProviderSpecific);
+		}
+
+		[SkipCI("We need to configure UTF-8 encoding for used docker image")]
+		[Test]
+		public async Task BulkCopyAllTypesMultipleRowsAsync([IncludeDataSources(TestProvName.AllSybase)] string context)
+		{
+			await BulkCopyAllTypesAsync(context, BulkCopyType.MultipleRows);
+		}
+
+		[SkipCI("We need to configure UTF-8 encoding for used docker image")]
+		[Test]
+		public async Task BulkCopyAllTypesProviderSpecificAsync([IncludeDataSources(TestProvName.AllSybase)] string context)
+		{
+			await BulkCopyAllTypesAsync(context, BulkCopyType.ProviderSpecific);
+		}
+
+		[Test]
+		public void CreateAllTypes([IncludeDataSources(TestProvName.AllSybase)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var ms = new MappingSchema();
+
+				db.AddMappingSchema(ms);
+
+				ms.GetFluentMappingBuilder()
+					.Entity<AllType>()
+						.HasTableName("AllTypeCreateTest");
+
+				try
+				{
+					db.DropTable<AllType>();
+				}
+				catch
+				{
+				}
+
+				var table = db.CreateTable<AllType>();
+
+				var list = table.ToList();
+
+				db.DropTable<AllType>();
+			}
+		}
+		#endregion
 	}
 }

@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-
-#pragma warning disable 0108
 
 namespace Tests.UserTests
 {
@@ -14,11 +13,11 @@ namespace Tests.UserTests
 	public class Issue496Tests : TestBase
 	{
 		[Table("Parent", IsColumnAttributeRequired = false)]
-		class Parent1
+		new class Parent1
 		{
 			public int ParentID;
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true, IsBackReference = true)]
-			public ICollection<Child1> Children;
+			public ICollection<Child1> Children = null!;
 		}
 
 		[Table("Child", IsColumnAttributeRequired = false)]
@@ -33,7 +32,7 @@ namespace Tests.UserTests
 		{
 			public int ParentID;
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true, IsBackReference = true)]
-			public ICollection<Child2> Children;
+			public ICollection<Child2> Children = null!;
 		}
 
 		[Table("Child", IsColumnAttributeRequired = false)]
@@ -53,23 +52,23 @@ namespace Tests.UserTests
 		{
 			public int ParentID;
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true, IsBackReference = true)]
-			public ICollection<Child3> Children;
+			public ICollection<Child3> Children = null!;
 		}
 
 		[Table("Child", IsColumnAttributeRequired = false)]
 		class Child3
 		{
-			        public int   ChildID;
-			[Column]public MyInt ParentID;
+			        public int    ChildID;
+			[Column]public MyInt? ParentID;
 		}
 
 		[Table("Parent", IsColumnAttributeRequired = false)]
-		class Parent4
+		new class Parent4
 		{
 			[Column]
-			public MyInt ParentID;
+			public MyInt? ParentID;
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true, IsBackReference = true)]
-			public ICollection<Child4> Children;
+			public ICollection<Child4> Children = null!;
 		}
 
 		[Table("Child", IsColumnAttributeRequired = false)]
@@ -80,23 +79,23 @@ namespace Tests.UserTests
 		}
 
 		[Table("Parent", IsColumnAttributeRequired = false)]
-		class Parent5
+		new class Parent5
 		{
 			[Column]
-			public MyInt ParentID;
+			public MyInt? ParentID;
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true, IsBackReference = true)]
-			public ICollection<Child5> Children;
+			public ICollection<Child5> Children = null!;
 		}
 
 		[Table("Child", IsColumnAttributeRequired = false)]
 		class Child5
 		{
-			        public int   ChildID;
-			[Column]public MyInt ParentID;
+			         public int    ChildID;
+			[Column] public MyInt? ParentID;
 		}
 
-		[Test, DataContextSource]
-		public void Test1(string context)
+		[Test]
+		public void Test1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -108,14 +107,14 @@ namespace Tests.UserTests
 				Assert.IsNotEmpty(children);
 
 				var expected = Child.Where(_ => _.ParentID == 1);
-				var result = children.Select(_ => new Model.Child() { ChildID = _.ChildID, ParentID = _.ParentID.Value });
+				var result = children.Select(_ => new Model.Child { ChildID = _.ChildID, ParentID = _.ParentID!.Value });
 
 				AreEqual(expected, result);
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test2(string context)
+		[Test]
+		public void Test2([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -128,8 +127,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test3(string context)
+		[Test]
+		public void Test3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -147,8 +146,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test4(string context)
+		[Test]
+		public void Test4([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -171,15 +170,19 @@ namespace Tests.UserTests
 
 			schema.SetConvertExpression<MyInt,   int>          (x => x.RealValue);
 			schema.SetConvertExpression<int,     MyInt>        (x => new MyInt { RealValue = x });
-			schema.SetConvertExpression<Int64,   MyInt>        (x => new MyInt { RealValue = (int)x }); //SQLite
+			schema.SetConvertExpression<long,    MyInt>        (x => new MyInt { RealValue = (int)x }); //SQLite
 			schema.SetConvertExpression<decimal, MyInt>        (x => new MyInt { RealValue = (int)x }); //Oracle
 			schema.SetConvertExpression<MyInt,   DataParameter>(x => new DataParameter { DataType = DataType.Int32, Value = x.RealValue });
+
+			// linqservice serialization
+			schema.SetConvertExpression<MyInt, string>(x => x.RealValue.ToString(CultureInfo.InvariantCulture));
+			schema.SetConvertExpression<string, MyInt>(x => new MyInt { RealValue = int.Parse(x) });
 
 			return schema;
 		}
 
-		[Test, DataContextSource]
-		public void Test5(string context)
+		[Test]
+		public void Test5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, GetMyIntSchema()))
 			{
@@ -191,19 +194,19 @@ namespace Tests.UserTests
 				Assert.IsNotEmpty(children);
 
 				var expected = Child.Where(_ => _.ParentID == 1);
-				var result = children.Select(_ => new Model.Child() { ChildID = _.ChildID, ParentID = _.ParentID.RealValue });
+				var result = children.Select(_ => new Model.Child() { ChildID = _.ChildID, ParentID = _.ParentID!.RealValue });
 
 				AreEqual(expected, result);
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test7(string context)
+		[Test]
+		public void Test7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, GetMyIntSchema()))
 			{
 				var children = db.GetTable<Parent4>()
-					.Where(_ => _.ParentID.RealValue == 1)
+					.Where(_ => _.ParentID!.RealValue == 1)
 					.SelectMany(_ => _.Children)
 					.ToList();
 
@@ -216,25 +219,23 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
-		public void Test9(string context)
+		[Test]
+		public void Test9([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, GetMyIntSchema()))
 			{
 				var children = db.GetTable<Parent5>()
-					.Where(_ => _.ParentID.RealValue == 1)
+					.Where(_ => _.ParentID!.RealValue == 1)
 					.SelectMany(_ => _.Children)
 					.ToList();
 
 				Assert.IsNotEmpty(children);
 
 				var expected = Child.Where(_ => _.ParentID == 1);
-				var result = children.Select(_ => new Model.Child() { ChildID = _.ChildID, ParentID = _.ParentID.RealValue });
+				var result = children.Select(_ => new Model.Child() { ChildID = _.ChildID, ParentID = _.ParentID!.RealValue });
 
 				AreEqual(expected, result);
 			}
 		}
 	}
 }
-
-#pragma warning restore 0108

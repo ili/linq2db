@@ -20,32 +20,32 @@ namespace Tests.Exceptions
 			{
 			}
 
-			protected override SelectQuery ProcessQuery(SelectQuery selectQuery)
+			protected override SqlStatement ProcessQuery(SqlStatement statement)
 			{
-				if (selectQuery.IsInsert && selectQuery.Insert.Into.Name == "Parent")
+				if (statement.IsInsert() && statement.RequireInsertClause().Into!.Name == "Parent")
 				{
 					var expr =
-						new QueryVisitor().Find(selectQuery.Insert, e =>
+						new QueryVisitor().Find(statement.RequireInsertClause(), e =>
 						{
 							if (e.ElementType == QueryElementType.SetExpression)
 							{
-								var se = (SelectQuery.SetExpression)e;
+								var se = (SqlSetExpression)e;
 								return ((SqlField)se.Column).Name == "ParentID";
 							}
 
 							return false;
-						}) as SelectQuery.SetExpression;
+						}) as SqlSetExpression;
 
 					if (expr != null)
 					{
-						var value = ConvertTo<int>.From(((IValueContainer)expr.Expression).Value);
+						var value = ConvertTo<int>.From(((IValueContainer)expr.Expression!).Value);
 
 						if (value == 555)
 						{
 							var tableName = "Parent1";
 							var dic       = new Dictionary<IQueryElement,IQueryElement>();
 
-							selectQuery = new QueryVisitor().Convert(selectQuery, e =>
+							statement = ConvertVisitor.Convert(statement, (v, e) =>
 							{
 								if (e.ElementType == QueryElementType.SqlTable)
 								{
@@ -62,19 +62,22 @@ namespace Tests.Exceptions
 									}
 								}
 
-								IQueryElement ex;
-								return dic.TryGetValue(e, out ex) ? ex : null;
+								IQueryElement? ex;
+								return dic.TryGetValue(e, out ex) ? ex : e;
 							});
 						}
 					}
+
+					return statement;
 				}
 
-				return selectQuery;
+				return statement;
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
-		public void ReplaceTableTest(string context)
+		[Test]
+		public void ReplaceTableTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)]
+			string context)
 		{
 			using (var db = new MyDataConnection(context))
 			{
@@ -82,8 +85,8 @@ namespace Tests.Exceptions
 
 				var n = 555;
 
-				Assert.Throws(
-					typeof(System.Data.SqlClient.SqlException),
+				var ex = Assert.Throws(
+					Is.AssignableTo<Exception>(),
 					() =>
 						db.Parent.Insert(() => new Parent
 						{
@@ -91,9 +94,10 @@ namespace Tests.Exceptions
 							Value1   = n
 						}),
 					"Invalid object name 'Parent1'.");
+				Assert.True(ex.GetType().Name == "SqlException");
 
-				Assert.Throws(
-					typeof(System.Data.SqlClient.SqlException),
+				ex = Assert.Throws(
+					Is.AssignableTo<Exception>(),
 					() =>
 						db.Parent.Insert(() => new Parent
 						{
@@ -101,6 +105,7 @@ namespace Tests.Exceptions
 							Value1   = n
 						}),
 					"Invalid object name 'Parent1'.");
+				Assert.True(ex.GetType().Name == "SqlException");
 
 				db.Parent.Delete(p => p.ParentID == n);
 			}

@@ -1,6 +1,4 @@
-﻿using System;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 
 namespace Tests.Model
@@ -17,7 +15,7 @@ namespace Tests.Model
 		[Column("PersonID", IsPrimaryKey = true)]
 		public int      ID     { get; set; }
 		public Gender   Gender { get; set; }
-		public FullName Name   { get; set; }
+		public FullName Name   { get; set; } = null!;
 
 		[NotColumn]
 		int IPerson.ID
@@ -41,7 +39,7 @@ namespace Tests.Model
 		}
 
 		[NotColumn]
-		string IPerson.MiddleName
+		string? IPerson.MiddleName
 		{
 			get { return Name.MiddleName; }
 			set { Name.MiddleName = value; }
@@ -67,13 +65,13 @@ namespace Tests.Model
 		[Column("PersonID", IsPrimaryKey = true)]
 		public int      ID     { get; set; }
 		public Gender   Gender { get; set; }
-		public FullName Name   { get; set; }
+		public FullName Name   { get; set; } = null!;
 	}
 
 	public class ComplexPerson3 
 	{
 		public int      ID     { get; set; }
 		public Gender   Gender { get; set; }
-		public FullName Name   { get; set; }
+		public FullName Name   { get; set; } = null!;
 	}
 }

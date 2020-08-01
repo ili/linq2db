@@ -1,6 +1,6 @@
 DROP PROCEDURE DROPEXISTINGTABLE;;
 CREATE PROCEDURE DROPEXISTINGTABLE
-( 	IN TABLENAME VARCHAR(50), 
+( 	IN TABLENAME VARCHAR(50),
 	IN SCHEMANAME VARCHAR(50)
 ) LANGUAGE SQLSCRIPT AS MYROWID INTEGER;
 BEGIN
@@ -13,7 +13,7 @@ END;;
 
 DROP PROCEDURE DROPEXISTINGPROCEDURE;;
 CREATE PROCEDURE DROPEXISTINGPROCEDURE
-( 	IN PROCEDURENAME VARCHAR(50), 
+( 	IN PROCEDURENAME VARCHAR(50),
 	IN SCHEMANAME VARCHAR(50)
 ) LANGUAGE SQLSCRIPT AS MYROWID INTEGER;
 BEGIN
@@ -26,7 +26,7 @@ END;;
 
 DROP PROCEDURE DROPEXISTINGFUNCTION;;
 CREATE PROCEDURE DROPEXISTINGFUNCTION
-( 	IN FUNCTIONNAME VARCHAR(50), 
+( 	IN FUNCTIONNAME VARCHAR(50),
 	IN SCHEMANAME VARCHAR(50)
 ) LANGUAGE SQLSCRIPT AS MYROWID INTEGER;
 BEGIN
@@ -39,7 +39,7 @@ END;;
 
 DROP PROCEDURE DROPEXISTINGVIEW;;
 CREATE PROCEDURE DROPEXISTINGVIEW
-( 	IN VIEWNAME VARCHAR(50), 
+( 	IN VIEWNAME VARCHAR(50),
 	IN SCHEMANAME VARCHAR(50)
 ) LANGUAGE SQLSCRIPT AS MYROWID INTEGER;
 BEGIN
@@ -52,7 +52,7 @@ END;;
 
 DROP PROCEDURE DROPCONSTRAINTFROMTABLE;;
 CREATE PROCEDURE DROPCONSTRAINTFROMTABLE
-( 	IN TABLENAME VARCHAR(50), 
+( 	IN TABLENAME VARCHAR(50),
 	IN CONSTRAINTNAME VARCHAR(100),
 	IN SCHEMANAME VARCHAR(50)
 ) LANGUAGE SQLSCRIPT AS MYROWID INTEGER;
@@ -72,7 +72,7 @@ CREATE TABLE "InheritanceParent"
 	"InheritanceParentId" INTEGER        NOT NULL,
 	"TypeDiscriminator"   INTEGER            NULL,
 	"Name"                NVARCHAR(50)       NULL,
-	
+
 	PRIMARY KEY ("InheritanceParentId")
 );;
 
@@ -84,7 +84,7 @@ CREATE TABLE "InheritanceChild"
 	"InheritanceParentId" INTEGER       NOT NULL,
 	"TypeDiscriminator"   INTEGER           NULL,
 	"Name"                NVARCHAR(50)      NULL,
-	
+
 	PRIMARY KEY ("InheritanceChildId")
 );;
 
@@ -105,6 +105,7 @@ CREATE COLUMN TABLE "Person" (
 INSERT INTO "Person"("FirstName","LastName","Gender") VALUES ('John',   'Pupkin',    'M');;
 INSERT INTO "Person"("FirstName","LastName","Gender") VALUES ('Tester', 'Testerson', 'M');;
 INSERT INTO "Person"("FirstName","LastName","Gender") VALUES ('Jane',   'Doe',       'F');;
+INSERT INTO "Person"("FirstName","LastName","MiddleName","Gender") VALUES ('Jürgen', 'König', 'Ko', 'M');;
 
 
 CREATE COLUMN TABLE "Doctor"
@@ -115,12 +116,13 @@ CREATE COLUMN TABLE "Doctor"
 );;
 ALTER TABLE "Doctor" ADD CONSTRAINT "FK_Doctor_Person" FOREIGN KEY ("PersonID") REFERENCES "Person" ("PersonID") ON UPDATE CASCADE ON DELETE CASCADE;;
 
+INSERT INTO "Doctor" ("PersonID", "Taxonomy") VALUES (1, 'Psychiatry');;
 
 CREATE COLUMN TABLE "Patient"
 (
 	"PersonID" INTEGER NOT NULL,
 	"Diagnosis" NVARCHAR(256) NOT NULL,
-	PRIMARY KEY ("PersonID")	
+	PRIMARY KEY ("PersonID")
 );;
 ALTER TABLE "Patient" ADD CONSTRAINT "FK_Patient_Person" FOREIGN KEY ("PersonID") REFERENCES "Person" ("PersonID") ON UPDATE CASCADE ON DELETE CASCADE;;
 
@@ -194,7 +196,7 @@ CREATE PROCEDURE "Person_Insert_OutputParameter"
 BEGIN
 	INSERT INTO "Person"("LastName", "FirstName", "MiddleName", "Gender")
 	VALUES (:LastName, :FirstName, :MiddleName, :Gender);
-	
+
 	SELECT MAX("PersonID") INTO PersonID FROM "Person";
 END;;
 
@@ -205,7 +207,7 @@ CREATE PROCEDURE "Person_Update"
 	IN FirstName NVARCHAR(50),
 	IN LastName NVARCHAR(50),
 	IN MiddleName NVARCHAR(50),
-	IN Gender CHAR(1)	
+	IN Gender CHAR(1)
 ) LANGUAGE SQLSCRIPT AS
 BEGIN
 	UPDATE "Person"
@@ -214,7 +216,7 @@ BEGIN
 		"LastName" = :LastName,
 		"MiddleName" = :MiddleName,
 		"Gender" = :Gender
-	WHERE 
+	WHERE
 		"PersonID" = :PersonID;
 END;;
 
@@ -304,13 +306,15 @@ CREATE COLUMN TABLE "AllTypes"
 	"dateDataType" DATE NULL,
 	"timeDataType" TIME NULL,
 	"seconddateDataType" SECONDDATE NULL,
-	"timestampDataType" TIMESTAMP NULL,	
+	"timestampDataType" TIMESTAMP NULL,
 
 	"charDataType" CHAR(1) NULL,
+	"char20DataType" CHAR(20) NULL,
 	"varcharDataType" VARCHAR(20) NULL,
 	"textDataType" TEXT NULL,
 	"shorttextDataType" SHORTTEXT(20) NULL,
 	"ncharDataType" NCHAR(1) NULL,
+	"nchar20DataType" NCHAR(20) NULL,
 	"nvarcharDataType" NVARCHAR(20) NULL,
 	"alphanumDataType" ALPHANUM(20) NULL,
 
@@ -319,36 +323,36 @@ CREATE COLUMN TABLE "AllTypes"
 
 	"blobDataType" BLOB NULL,
 	"clobDataType" CLOB NULL,
-	"nclobDataType" NCLOB NULL,		
+	"nclobDataType" NCLOB NULL,
 	PRIMARY KEY ("ID")
 );;
 
 
 INSERT INTO "AllTypes"
 (
-	"bigintDataType", "smallintDataType", "decimalDataType", "smalldecimalDataType", "intDataType", "tinyintDataType", "floatDataType", "realDataType", 
+	"bigintDataType", "smallintDataType", "decimalDataType", "smalldecimalDataType", "intDataType", "tinyintDataType", "floatDataType", "realDataType",
 	"dateDataType", "timeDataType", "seconddateDataType", "timestampDataType",
 	"charDataType", "varcharDataType", "textDataType", "shorttextDataType", "ncharDataType", "nvarcharDataType", "alphanumDataType",
 	"binaryDataType", "varbinaryDataType",
 	"blobDataType", "clobDataType", "nclobDataType"
-) VALUES( 
+) VALUES(
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL,
 	NULL, NULL,  NULL);;
-	
+
 INSERT INTO "AllTypes"
 (
-	"bigintDataType", "smallintDataType", "decimalDataType", "smalldecimalDataType", "intDataType", "tinyintDataType", "floatDataType", "realDataType", 
+	"bigintDataType", "smallintDataType", "decimalDataType", "smalldecimalDataType", "intDataType", "tinyintDataType", "floatDataType", "realDataType",
 	"dateDataType", "timeDataType", "seconddateDataType", "timestampDataType",
 	"charDataType", "varcharDataType", "textDataType", "shorttextDataType", "ncharDataType", "nvarcharDataType", "alphanumDataType",
 	"binaryDataType", "varbinaryDataType",
 	"blobDataType", "clobDataType", "nclobDataType"
-) VALUES( 
+) VALUES(
 	123456789123456789, 12345, 1234.567, 123.456, 123456789, 123, 1234.567, 1234.567,
-	'2012-12-12', '12:12:12', '2012-12-12 12:12:12', '2012-12-12 12:12:12.123',	           
-	'a', 'bcd', 'abcdefgh', 'def', 'ą',  'ąčęėįš', 'qwert123QWE',
+	'2012-12-12', '12:12:12', '2012-12-12 12:12:12', '2012-12-12 12:12:12.123',
+	'1', 'bcd', 'abcdefgh', 'def', 'ą',  'ąčęėįš', 'qwert123QWE',
 	CAST( 'abcdefgh' AS BINARY), CAST( 'abcdefgh' AS VARBINARY),
 	'abcdefgh', 'qwertyuiop', 'ąčęėįšqwerty123456' );;
 
@@ -358,7 +362,7 @@ CREATE COLUMN TABLE "AllTypesGeo"
 (
 	ID INTEGER CS_INT NOT NULL GENERATED BY DEFAULT AS IDENTITY,
 	"dataType" varchar(20) NULL,
-	"stgeometryDataType" ST_GEOMETRY NULL,		
+	"stgeometryDataType" ST_GEOMETRY NULL,
 	PRIMARY KEY ("ID")
 );;
 
@@ -404,13 +408,13 @@ CREATE FUNCTION "GetParentByID"
 	id INTEGER
 )
 RETURNS TABLE(
-	"ParentID" INTEGER, 
+	"ParentID" INTEGER,
 	"Value1" INTEGER
 )
 LANGUAGE SQLSCRIPT
 SQL SECURITY INVOKER AS
 BEGIN
-	RETURN 	
+	RETURN
 	SELECT * FROM "Parent" WHERE "ParentID" = :id;
 END;;
 
@@ -453,7 +457,8 @@ CREATE COLUMN TABLE "LinqDataTypes"
 	"BinaryValue" VARBINARY(5000) NULL,
 	"SmallIntValue" SMALLINT,
 	"IntValue" INTEGER NULL,
-	"BigIntValue" BIGINT NULL
+	"BigIntValue" BIGINT NULL,
+	"StringValue" NVARCHAR(50) NULL
 );;
 
 CALL DROPEXISTINGTABLE('BulkInsertLowerCaseColumns', CURRENT_SCHEMA);;
@@ -524,3 +529,90 @@ CREATE COLUMN TABLE "IndexTable2" (
 	PRIMARY KEY ("PKField1", "PKField2")
 );;
 ALTER TABLE "IndexTable2" ADD CONSTRAINT "FK_Patient2_IndexTable" FOREIGN KEY ("PKField1", "PKField2") REFERENCES "IndexTable" ("PKField1", "PKField2") ON UPDATE CASCADE ON DELETE CASCADE;;
+
+CALL DROPEXISTINGTABLE('TestMerge1', CURRENT_SCHEMA);;
+
+CALL DROPEXISTINGTABLE('TestMerge2', CURRENT_SCHEMA);;
+
+CREATE TABLE "TestMerge1"
+(
+	"Id"       INTEGER        NOT NULL,
+	"Field1"   INTEGER            NULL,
+	"Field2"   INTEGER            NULL,
+	"Field3"   INTEGER            NULL,
+	"Field4"   INTEGER            NULL,
+	"Field5"   INTEGER            NULL,
+
+	"FieldInt64"      BIGINT            NULL,
+	"FieldBoolean"    TINYINT           NULL,
+	"FieldString"     VARCHAR(20)       NULL,
+	"FieldNString"    NVARCHAR(20)      NULL,
+	"FieldChar"       CHAR(1)           NULL,
+	"FieldNChar"      NCHAR(1)          NULL,
+	"FieldFloat"      FLOAT(24)         NULL,
+	"FieldDouble"     FLOAT(53)         NULL,
+	"FieldDateTime"   DATETIME          NULL,
+	"FieldBinary"     VARBINARY(20)     NULL,
+	"FieldGuid"       CHAR(36)          NULL,
+	"FieldDecimal"    DECIMAL(24, 10)   NULL,
+	"FieldDate"       DATE              NULL,
+	"FieldTime"       TIME              NULL,
+	"FieldEnumString" VARCHAR(20)       NULL,
+	"FieldEnumNumber" INT               NULL,
+
+	PRIMARY KEY ("Id")
+);;
+
+CREATE TABLE "TestMerge2"
+(
+	"Id"       INTEGER        NOT NULL,
+	"Field1"   INTEGER            NULL,
+	"Field2"   INTEGER            NULL,
+	"Field3"   INTEGER            NULL,
+	"Field4"   INTEGER            NULL,
+	"Field5"   INTEGER            NULL,
+
+	"FieldInt64"      BIGINT            NULL,
+	"FieldBoolean"    TINYINT           NULL,
+	"FieldString"     VARCHAR(20)       NULL,
+	"FieldNString"    NVARCHAR(20)      NULL,
+	"FieldChar"       CHAR(1)           NULL,
+	"FieldNChar"      NCHAR(1)          NULL,
+	"FieldFloat"      FLOAT(24)         NULL,
+	"FieldDouble"     FLOAT(53)         NULL,
+	"FieldDateTime"   DATETIME          NULL,
+	"FieldBinary"     VARBINARY(20)     NULL,
+	"FieldGuid"       CHAR(36)          NULL,
+	"FieldDecimal"    DECIMAL(24, 10)   NULL,
+	"FieldDate"       DATE              NULL,
+	"FieldTime"       TIME              NULL,
+	"FieldEnumString" VARCHAR(20)       NULL,
+	"FieldEnumNumber" INT               NULL,
+
+	PRIMARY KEY ("Id")
+);;
+
+CALL DROPEXISTINGPROCEDURE('AddIssue792Record', CURRENT_SCHEMA);;
+
+CREATE PROCEDURE "AddIssue792Record"()
+LANGUAGE SQLSCRIPT AS
+BEGIN
+	INSERT INTO "AllTypes"("char20DataType") VALUES('issue792');
+END;;
+
+CALL DROPEXISTINGTABLE('prd.global.ecc/CV_MARA', CURRENT_SCHEMA);;
+
+CREATE TABLE "prd.global.ecc/CV_MARA"
+(
+	"Id" INTEGER        NOT NULL,
+
+	PRIMARY KEY ("Id")
+);;
+
+CALL DROPEXISTINGPROCEDURE('prd.global.ecc/CV_MARAproc', CURRENT_SCHEMA);;
+
+CREATE PROCEDURE "prd.global.ecc/CV_MARAproc"()
+LANGUAGE SQLSCRIPT AS
+BEGIN
+	SELECT 123 as "id", '456' as "id" FROM DUMMY;
+END;;

@@ -1,24 +1,16 @@
 ﻿using System;
 using System.Data;
 using System.Linq.Expressions;
-
-using NUnit.Framework;
-
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.DataProvider.SQLite;
+using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-#if !NETSTANDARD
-	using System.Configuration;
-#endif
 	[TestFixture]
 	public class ExpressionTests : TestBase
 	{
-		[Test, NorthwindDataContext(true)] // SQLite returns Int64 for column instead of Int32
-		public void Test1(string context)
+		[Test] // SQLite returns Int64 for column instead of Int32
+		public void Test1([NorthwindDataContext(true)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
 			var dataProvider     = DataConnection.GetDataProvider(context);
@@ -26,7 +18,7 @@ namespace Tests.DataProvider
 
 			using (var conn = new DataConnection(dataProvider, connectionString))
 			{
-				conn.InitCommand(CommandType.Text, "SELECT 1", null, null);
+				conn.InitCommand(CommandType.Text, "SELECT 1", null, null, false);
 
 				var rd = conn.Command.ExecuteReader();
 
@@ -35,7 +27,7 @@ namespace Tests.DataProvider
 					var dp   = conn.DataProvider;
 					var p    = Expression.Parameter(typeof(IDataReader));
 					var dr   = Expression.Convert(p, dp.DataReaderType);
-					var ex   = (Expression<Func<IDataReader,int,int>>)dp.GetReaderExpression(conn.MappingSchema, rd, 0, dr, typeof(int));
+					var ex   = (Expression<Func<IDataReader,int,int>>)dp.GetReaderExpression(rd, 0, dr, typeof(int));
 					var func = ex.Compile();
 
 					do
