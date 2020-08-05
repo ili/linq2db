@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -24,6 +24,7 @@ namespace Tests.Tools
 		public string?   TraceLevel;
 		public string?   DefaultConfiguration;
 		public string?   NoLinqService;
+		public string[]? AddProviders;
 		public Dictionary<string,TestConnection> Connections = new Dictionary<string,TestConnection>();
 	}
 

@@ -125,10 +125,13 @@ namespace Tests
 				File.Copy(file, destination, true);
 			}
 
-			UserProviders  = new HashSet<string>(testSettings.Providers ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
-			SkipCategories = new HashSet<string>(testSettings.Skip ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
+			if (testSettings.AddProviders != null)
+				Providers.AddRange(testSettings.AddProviders);
 
-			var logLevel = testSettings.TraceLevel;
+			UserProviders  = new HashSet<string>(testSettings.Providers ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
+			SkipCategories = new HashSet<string>(testSettings.Skip      ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
+
+			var logLevel   = testSettings.TraceLevel;
 			var traceLevel = TraceLevel.Info;
 
 			if (!string.IsNullOrEmpty(logLevel))
