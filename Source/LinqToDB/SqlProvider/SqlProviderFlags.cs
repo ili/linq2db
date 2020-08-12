@@ -29,6 +29,10 @@ namespace LinqToDB.SqlProvider
 		public int         MaxInListValuesCount           { get; set; }
 		public bool        IsUpdateSetTableAliasSupported { get; set; }
 		public TakeHints?  TakeHintsSupported             { get; set; }
+		public bool        IsUpdateSupported              { get; set; } = true;
+		public bool        IsDeleteSupported              { get; set; } = true;
+		public bool        IsInsertWithIdentitySupported  { get; set; } = true;
+		public bool        IsAffectedRowsSupported        { get; set; } = true;
 
 		/// <summary>
 		/// Provider supports:
