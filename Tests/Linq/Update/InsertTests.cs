@@ -83,8 +83,7 @@ namespace Tests.xUpdate
 			{
 				try
 				{
-					if (db.SqlProviderFlags.IsDeleteSupported)
-						db.Types.Delete(c => c.ID > 1000);
+					db.Types.Delete(c => c.ID > 1000);
 
 					Assert.AreEqual(
 						Types.Select(_ => _.ID / 3).Distinct().Count(),
@@ -99,8 +98,7 @@ namespace Tests.xUpdate
 				}
 				finally
 				{
-					if (db.SqlProviderFlags.IsDeleteSupported)
-						db.Types.Delete(c => c.ID > 1000);
+					db.Types.Delete(c => c.ID > 1000);
 				}
 			}
 		}
@@ -112,14 +110,11 @@ namespace Tests.xUpdate
 			{
 				try
 				{
-					var id  = 1001;
+					var id = 1001;
 
-					if (db.SqlProviderFlags.IsDeleteSupported)
-						db.Child.Delete(c => c.ChildID > 1000);
-					
-					var cnt = db.Child.Count(c => c.ChildID == id);
+					db.Child.Delete(c => c.ChildID > 1000);
 
-					Assert.AreEqual(db.SqlProviderFlags.IsAffectedRowsSupported ? 1 : 0,
+					Assert.AreEqual(1,
 						db.Child
 						.Insert(() => new Child
 						{
@@ -127,12 +122,11 @@ namespace Tests.xUpdate
 							ChildID  = id
 						}));
 
-					Assert.AreEqual(cnt+1, db.Child.Count(c => c.ChildID == id));
+					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
 				}
 				finally
 				{
-					if (db.SqlProviderFlags.IsDeleteSupported)
-						db.Child.Delete(c => c.ChildID > 1000);
+					db.Child.Delete(c => c.ChildID > 1000);
 				}
 			}
 		}
@@ -1443,20 +1437,18 @@ namespace Tests.xUpdate
 
 				try
 				{
-					p.ID = id + 1;
 					db.Insert(p);
 
 					var inserted = db.GetTable<ComplexPerson>().Single(p2 => p2.ID > id);
 
 					Assert.AreEqual(p.Name.FirstName, inserted.Name.FirstName);
-					Assert.AreEqual(p.Name.LastName,  inserted.Name.LastName);
-					Assert.AreEqual(p.Gender,         inserted.Gender);
+					Assert.AreEqual(p.Name.LastName, inserted.Name.LastName);
+					Assert.AreEqual(p.Gender, inserted.Gender);
 
 				}
 				finally
 				{
-					if (db.SqlProviderFlags.IsDeleteSupported)
-						db.Person.Delete(t => t.ID > id);
+					db.Person.Delete(t => t.ID > id);
 				}
 			}
 		}
@@ -1470,22 +1462,16 @@ namespace Tests.xUpdate
 
 				try
 				{
-					var qry = db
+					db
 						.Into(db.GetTable<ComplexPerson>())
 							.Value(_ => _.Name.FirstName, "FirstName")
 							.Value(_ => _.Name.LastName,  () => "LastName")
-							.Value(_ => _.Gender,         Gender.Female);
-					
-					if (!db.SqlProviderFlags.IsInsertWithIdentitySupported)
-						qry = qry
-							.Value(_ => _.ID,             () => id + 1);
-
-					qry.Insert();
+							.Value(_ => _.Gender,         Gender.Female)
+						.Insert();
 				}
 				finally
 				{
-					if (db.SqlProviderFlags.IsDeleteSupported)
-						db.Person.Delete(t => t.ID > id);
+					db.Person.Delete(t => t.ID > id);
 				}
 			}
 		}
@@ -1499,36 +1485,21 @@ namespace Tests.xUpdate
 
 				try
 				{
-					if (db.SqlProviderFlags.IsInsertWithIdentitySupported)
-						db
-							.GetTable<ComplexPerson>()
-							.Insert(() => new ComplexPerson
+					db
+						.GetTable<ComplexPerson>()
+						.Insert(() => new ComplexPerson
+						{
+							Name = new FullName
 							{
-								Name = new FullName
-								{
-									FirstName = "FirstName",
-									LastName  = "LastName"
-								},
-								Gender = Gender.Male
-							});
-					else
-						db
-							.GetTable<ComplexPerson>()
-							.Insert(() => new ComplexPerson
-							{
-								Name = new FullName
-								{
-									FirstName = "FirstName",
-									LastName  = "LastName"
-								},
-								Gender = Gender.Male,
-								ID = id + 1
-							});
+								FirstName = "FirstName",
+								LastName  = "LastName"
+							},
+							Gender = Gender.Male,
+						});
 				}
 				finally
 				{
-					if (db.SqlProviderFlags.IsDeleteSupported)
-						db.Person.Delete(t => t.ID > id);
+					db.Person.Delete(t => t.ID > id);
 				}
 			}
 		}
@@ -1543,26 +1514,22 @@ namespace Tests.xUpdate
 			{
 				try
 				{
-					var cnt = db.Person.Count(p => p.FirstName.StartsWith("Insert14"));
-
-					if (db.SqlProviderFlags.IsDeleteSupported)
-						db.Person.Delete(p => p.FirstName.StartsWith("Insert14"));
+					db.Person.Delete(p => p.FirstName.StartsWith("Insert14"));
 
 					Assert.AreEqual(1,
 						db.Person
 						.Insert(() => new Person
 						{
-							FirstName = "Insert14" + db.Person.Where(p => p.ID == 1).Select(_ => _.FirstName).FirstOrDefault(),
+							FirstName = "Insert14" + db.Person.Where(p => p.ID == 1).Select(p => p.FirstName).FirstOrDefault(),
 							LastName  = "Shepard",
-							Gender    = Gender.Male
+							Gender = Gender.Male
 						}));
 
-					Assert.AreEqual(cnt + 1, db.Person.Count(p => p.FirstName.StartsWith("Insert14")));
+					Assert.AreEqual(1, db.Person.Count(p => p.FirstName.StartsWith("Insert14")));
 				}
 				finally
 				{
-					if (db.SqlProviderFlags.IsDeleteSupported)
-						db.Person.Delete(p => p.FirstName.StartsWith("Insert14"));
+					db.Person.Delete(p => p.FirstName.StartsWith("Insert14"));
 				}
 			}
 		}
@@ -1572,9 +1539,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
-				if (db.SqlProviderFlags.IsDeleteSupported)
-					db.Person.Where(_ => _.FirstName.StartsWith("Insert15")).Delete();
-				var cnt1 = db.Person.Where(_ => _.FirstName.StartsWith("Insert15")).Count();
+				db.Person.Where(_ => _.FirstName.StartsWith("Insert15")).Delete();
 
 				try
 				{
@@ -1588,13 +1553,12 @@ namespace Tests.xUpdate
 							Gender = Gender.Male,
 						});
 
-					var cnt2 = db.Person.Where(_ => _.FirstName.StartsWith("Insert15")).Count();
-					Assert.AreEqual(cnt1 + 1, cnt2);
+					var cnt = db.Person.Where(_ => _.FirstName.StartsWith("Insert15")).Count();
+					Assert.AreEqual(1, cnt);
 				}
 				finally
 				{
-					if (db.SqlProviderFlags.IsDeleteSupported)
-						db.Person.Where(_ => _.FirstName.StartsWith("Insert15")).Delete();
+					db.Person.Where(_ => _.FirstName.StartsWith("Insert15")).Delete();
 				}
 			}
 		}
@@ -1604,15 +1568,12 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
-				if (db.SqlProviderFlags.IsDeleteSupported)
-					db.Person.Where(_ => _.FirstName.StartsWith("Insert16")).Delete();
-		
-				var cnt1 = db.Person.Where(_ => _.FirstName.StartsWith("Insert16")).Count();
+				db.Person.Where(_ => _.FirstName.StartsWith("Insert16")).Delete();
 
 				try
 				{
 					var name = "Insert16";
-					var idx  = 4;
+					var idx = 4;
 
 					db.Person.Insert(() => new Person()
 					{
@@ -1621,13 +1582,12 @@ namespace Tests.xUpdate
 						Gender    = Gender.Male,
 					});
 
-					var cnt2 = db.Person.Where(_ => _.FirstName.StartsWith("Insert16")).Count();
-					Assert.AreEqual(cnt1 + 1, cnt2);
+					var cnt = db.Person.Where(_ => _.FirstName.StartsWith("Insert16")).Count();
+					Assert.AreEqual(1, cnt);
 				}
 				finally
 				{
-					if (db.SqlProviderFlags.IsDeleteSupported)
-						db.Person.Where(_ => _.FirstName.StartsWith("Insert16")).Delete();
+					db.Person.Where(_ => _.FirstName.StartsWith("Insert16")).Delete();
 				}
 			}
 		}
