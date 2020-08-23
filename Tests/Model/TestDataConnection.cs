@@ -86,7 +86,7 @@ namespace Tests.Model
 			//provider.SqlQuery = sql;
 
 			var statement = (SqlSelectStatement)optimizer.Finalize(new SqlSelectStatement(query), false);
-			statement.SetAliases();
+			statement.PrepareQueryAndAliases();
 
 			var cc = provider.CommandCount(statement);
 			var sb = new StringBuilder();
@@ -100,6 +100,9 @@ namespace Tests.Model
 				provider.BuildSql(i, statement, sb);
 				commands[i] = sb.ToString();
 			}
+
+			statement.Parameters.Clear();
+			statement.Parameters.AddRange(provider.ActualParameters);
 
 			return string.Join("\n\n", commands);
 		}
