@@ -788,11 +788,11 @@ namespace LinqToDB
 		[Sql.Function] public static sbyte?   Abs    (sbyte?   value) { return value == null ? null : (sbyte?)  Math.Abs    (value.Value); }
 		[Sql.Function] public static float?   Abs    (float?   value) { return value == null ? null : (float?)  Math.Abs    (value.Value); }
 
-		[Sql.Function] public static double?  Acos   (Double?  value) { return value == null ? null : (double?) Math.Acos   (value.Value); }
-		[Sql.Function] public static double?  Asin   (Double?  value) { return value == null ? null : (double?) Math.Asin   (value.Value); }
+		[Sql.Function] public static double?  Acos   (double?  value) { return value == null ? null : (double?) Math.Acos   (value.Value); }
+		[Sql.Function] public static double?  Asin   (double?  value) { return value == null ? null : (double?) Math.Asin   (value.Value); }
 
 		[Sql.Function(PN.Access, "Atn")]
-		[Sql.Function] public static double?  Atan   (Double?  value) { return value == null ? null : (double?) Math.Atan   (value.Value); }
+		[Sql.Function] public static double?  Atan   (double?  value) { return value == null ? null : (double?) Math.Atan   (value.Value); }
 
 		[CLSCompliant(false)]
 		[Sql.Function(PN.SqlServer, "Atn2")]
