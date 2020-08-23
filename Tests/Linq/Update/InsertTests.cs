@@ -1442,8 +1442,8 @@ namespace Tests.xUpdate
 					var inserted = db.GetTable<ComplexPerson>().Single(p2 => p2.ID > id);
 
 					Assert.AreEqual(p.Name.FirstName, inserted.Name.FirstName);
-					Assert.AreEqual(p.Name.LastName, inserted.Name.LastName);
-					Assert.AreEqual(p.Gender, inserted.Gender);
+					Assert.AreEqual(p.Name.LastName,  inserted.Name.LastName);
+					Assert.AreEqual(p.Gender,         inserted.Gender);
 
 				}
 				finally

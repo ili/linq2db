@@ -2384,7 +2384,7 @@ namespace LinqToDB.SqlProvider
 
 						if (!inlining)
 						{
-							Convert(StringBuilder, parm.Name!, ConvertType.NameToQueryParameter);
+							BuildParameter(parm);
 							AddParameter(parm);
 						}
 					}
@@ -2522,6 +2522,15 @@ namespace LinqToDB.SqlProvider
 				ValueToSqlConverter.Convert(StringBuilder, dataType, value);
 			else
 				ValueToSqlConverter.Convert(StringBuilder, value);
+		}
+
+		#endregion
+
+		#region BuildParameter
+
+		protected virtual void BuildParameter(SqlParameter parameter)
+		{
+			Convert(StringBuilder, parameter.Name!, ConvertType.NameToQueryParameter);
 		}
 
 		#endregion
