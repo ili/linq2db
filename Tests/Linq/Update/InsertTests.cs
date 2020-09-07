@@ -1940,10 +1940,10 @@ namespace Tests.xUpdate
 				{
 					var p = new Person()
 					{
-						FirstName = newName,
-						LastName = "whatever",
+						FirstName  = newName,
+						LastName   = "whatever",
 						MiddleName = "som middle name",
-						Gender = Gender.Male
+						Gender     = Gender.Male
 					};
 
 					db.Insert(p);
@@ -1986,8 +1986,8 @@ namespace Tests.xUpdate
 				var newName = "InsertOrReplaceColumnFilter";
 				var p = new TestInsertOrReplaceTable()
 				{
-					FirstName = newName,
-					LastName = "whatever",
+					FirstName  = newName,
+					LastName   = "whatever",
 					MiddleName = "som middle name",
 				};
 
@@ -2037,9 +2037,9 @@ namespace Tests.xUpdate
 				db.InsertOrReplace(item);
 
 				var res = table.Single();
-				Assert.AreEqual(1, res.Id);
+				Assert.AreEqual(1,       res.Id);
 				Assert.AreEqual("Test1", res.Name);
-				Assert.AreEqual(user, res.CreatedBy);
+				Assert.AreEqual(user,    res.CreatedBy);
 				Assert.IsNull(res.UpdatedBy);
 
 				item.Name      = "Test2";
@@ -2048,10 +2048,10 @@ namespace Tests.xUpdate
 				db.InsertOrReplace(item);
 
 				res = table.Single();
-				Assert.AreEqual(1, res.Id);
+				Assert.AreEqual(1,       res.Id);
 				Assert.AreEqual("Test2", res.Name);
-				Assert.AreEqual(user, res.CreatedBy);
-				Assert.AreEqual(user, res.UpdatedBy);
+				Assert.AreEqual(user,    res.CreatedBy);
+				Assert.AreEqual(user,    res.UpdatedBy);
 			}
 		}
 #endregion
