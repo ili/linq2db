@@ -1108,7 +1108,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Issue1096Task
+		internal class Issue1096Task
 		{
 			[Column]
 			public int Id { get; set; }
@@ -1124,7 +1124,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Issue1096TaskStage
+		internal class Issue1096TaskStage
 		{
 			[Column(IsPrimaryKey = true)]
 			public int Id { get; set; }
