@@ -1050,7 +1050,8 @@ namespace Tests.Linq
 
 				Assert.False(db.LastQuery!.Contains(" NOT"));
 				//Assert.True(db.LastQuery!.Contains("AND 1 <> [a_Department].[Deleted]"));
-				Assert.True(db.LastQuery!.Contains("AND 0 = [a_Department].[Deleted]"));
+				Assert.True(db.LastQuery!.Contains("AND 0 = [a_Department].[Deleted]") ||
+				            db.LastQuery!.Contains("AND [a_Department].[Deleted] = 0"));
 			}
 		}
 
