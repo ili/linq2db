@@ -130,6 +130,17 @@ namespace Tests
 
 			UserProviders  = new HashSet<string>(testSettings.Providers ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
 			SkipCategories = new HashSet<string>(testSettings.Skip      ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
+			SkipTests      = testSettings
+				.Connections
+				.Select(c => new 
+					{ 
+						c.Key, 
+						Skip = testSettings
+							.SkipTests?
+							.FirstOrDefault(s => s.Key == c.Value.SkipTests).Value ?? Array.Empty<string>()
+					})
+				.ToDictionary(_ => _.Key, _ => new HashSet<string>(_.Skip))
+			;
 
 			var logLevel   = testSettings.TraceLevel;
 			var traceLevel = TraceLevel.Info;
@@ -271,9 +282,10 @@ namespace Tests
 #endif
 		}
 
-		public static readonly HashSet<string> UserProviders;
-		public static readonly string? DefaultProvider;
-		public static readonly HashSet<string> SkipCategories;
+		public static readonly HashSet<string>                     UserProviders;
+		public static readonly string?                             DefaultProvider;
+		public static readonly HashSet<string>                     SkipCategories;
+		public static readonly Dictionary<string, HashSet<string>> SkipTests;
 
 		public static readonly List<string> Providers = new List<string>
 		{

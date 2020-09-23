@@ -28,9 +28,18 @@ namespace Tests
 				where a.ProviderName != null && TestBase.SkipCategories.Contains(a.Category)
 				select a.ProviderName);
 
-			var providers = skipAttrs.Count == 0 ?
-				GetProviders().ToList() :
-				GetProviders().Where(a => !skipAttrs.Contains(a)).ToList();
+			var methodName     = parameter.Method.Name;
+			var typeMethodName = $"{parameter.Method.MethodInfo.DeclaringType.Name}.{methodName}";
+			var fullMethodName = $"{parameter.Method.MethodInfo.DeclaringType.FullName}.{methodName}";
+			var skipTests      = TestBase.SkipTests;
+
+			var providers = skipAttrs.Count == 0 
+				? GetProviders() 
+				: GetProviders().Where(a => !skipAttrs.Contains(a));
+
+			providers = providers.Where(_ => !skipTests[_].Contains(methodName)
+				&& !skipTests[_].Contains(typeMethodName)
+				&& !skipTests[_].Contains(fullMethodName));
 
 			if (NoLinqService || !IncludeLinqService)
 				return providers;

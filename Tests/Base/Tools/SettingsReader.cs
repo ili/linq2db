@@ -14,6 +14,7 @@ namespace Tests.Tools
 	{
 		public string  ConnectionString = null!;
 		public string? Provider;
+		public string? SkipTests;
 	}
 
 	public class TestSettings
@@ -25,6 +26,7 @@ namespace Tests.Tools
 		public string?   DefaultConfiguration;
 		public string?   NoLinqService;
 		public string[]? AddProviders;
+		public Dictionary<string, string[]>? SkipTests = new Dictionary<string, string[]>();
 		public Dictionary<string,TestConnection> Connections = new Dictionary<string,TestConnection>();
 	}
 
